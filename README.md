@@ -172,6 +172,11 @@ the live site: the previous version simply stays online.
 - **After the night:** nothing to do. The event moves into the archive on its own (see below).
   Add `photos` and `recordings` whenever you have them.
 
+For archived events, keep the description and summary short in both languages. Leave out times,
+prices, food and booking details already on the poster; keep the structured fields for the event record.
+A couple of sentences about the artist, a curiosity or a record are enough. Link to releases, reviews
+or videos when you have a source, rather than adding a full biography or technical background.
+
 ---
 
 ## Posters and photos

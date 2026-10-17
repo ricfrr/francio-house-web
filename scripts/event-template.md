@@ -45,8 +45,12 @@ en:
 draft: false                        # true = hidden on the live site
 ---
 
-Testo lungo in italiano. Markdown normale: **grassetto**, *corsivo*, [link](https://...).
+Breve descrizione dell'artista in italiano: un paio di frasi, una curiosità o un disco, con link a recensioni o video se disponibili.
+Per gli eventi passati, evita orari, prezzi, snack e drink già sulla locandina e biografie troppo dettagliate.
+Markdown normale: **grassetto**, *corsivo*, [link](https://...).
 
 <!-- en -->
 
-The longer description in English. Delete this part (and the line above) if there's no English text.
+A short artist description in English: a couple of sentences, a curiosity or a record, with links to reviews or videos if available.
+For past events, leave out times, prices, snacks and drinks already on the poster and lengthy biographies.
+Delete this part (and the line above) if there's no English text.
