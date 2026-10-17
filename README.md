@@ -310,9 +310,8 @@ Performance:
 
 ---
 
-## Mock content
+## Content
 
-The 14 events, artists, links and posters in this repository are **made up** to show how the site
-looks with real content. The photos in the archive and in "the house" are the real reference photos
-of Francio House. Replace the events as soon as the first real ones are confirmed, and update the
-placeholder contacts in `src/site.config.ts`.
+The events are the real nights at the house (posters and details from the original flyers).
+The photos in "the house" section are real photos of Francio House.
+The contact email and Instagram in `src/site.config.ts` are still placeholders: replace them.

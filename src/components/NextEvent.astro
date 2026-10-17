@@ -319,7 +319,8 @@ const isUrl = (s?: string) => !!s && /^(https?:|mailto:)/.test(s);
   .hero__poster {
     position: relative;
     margin: 0;
-    width: min(100%, 520px);
+    width: fit-content;
+    max-width: min(100%, 520px);
     transform: perspective(900px) rotateX(var(--tx, 0deg)) rotateY(var(--ty, 0deg)) rotate(-2.5deg);
     transform-style: preserve-3d;
     transition: transform 0.6s var(--ease-out);
@@ -330,11 +331,12 @@ const isUrl = (s?: string) => !!s && /^(https?:|mailto:)/.test(s);
     transition-duration: 0.12s;
   }
 
+  /* the frame shrinks to the poster, whatever its shape */
   .hero__poster img {
-    width: 100%;
+    width: auto;
+    max-width: 100%;
+    height: auto;
     max-height: 66vh;
-    object-fit: contain;
-    background: var(--paper);
   }
 
   .hero__shine {
@@ -525,7 +527,7 @@ const isUrl = (s?: string) => !!s && /^(https?:|mailto:)/.test(s);
     }
 
     .hero__poster {
-      width: min(82vw, 440px);
+      max-width: min(82vw, 440px);
     }
 
     .hero__poster:global(.is-tilting) {
