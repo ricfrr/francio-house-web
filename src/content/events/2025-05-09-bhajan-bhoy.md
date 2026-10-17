@@ -2,7 +2,7 @@
 title: Bhajan Bhoy
 artist: Bhajan Bhoy
 genre: kosmische guitar psych · raga
-date: 2026-05-09
+date: 2025-05-09
 time: "19:30"
 poster: ./posters/bhajan-bhoy.jpg
 posterAlt: Manifesto con raggi verdi e bianchi che partono dal centro, dove c'è una foto rossa di un chitarrista seduto sul palco, e la scritta Bhajan Bhoy live.
