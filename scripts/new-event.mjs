@@ -32,7 +32,7 @@ if (posterFile) {
 
 const body = readFileSync(new URL('./event-template.md', import.meta.url), 'utf8')
   .replace(/^# Copy this file.*\n# and fill it in.*\n\n/m, '')
-  .replace('title: Name of the night', `title: ${artist}`)
+  .replace('title: Nome della serata', `title: ${artist}`)
   .replace('artist: Artist Name', `artist: ${artist}`)
   .replace('date: 2026-12-31', `date: ${date}`)
   .replace('./posters/artist-name.jpg', `./posters/${posterName}`)

@@ -5,8 +5,10 @@ import '@fontsource/space-mono/700.css';
 import '@fontsource/permanent-marker/400.css';
 import '../styles/global.css';
 import { site } from '../site.config';
+import { ui, langs, switchPath, type Lang } from '../i18n/ui';
 
 interface Props {
+  lang: Lang;
   title?: string;
   description?: string;
   /** Absolute or root-relative URL of the share image. */
@@ -16,14 +18,17 @@ interface Props {
   themeColor?: string;
 }
 
-const { title, description = site.description, image, intro = false, themeColor = '#d3166d' } = Astro.props;
-const fullTitle = title ? `${title} · ${site.name}` : `${site.name} — concerts in a house`;
+const { lang, title, image, intro = false, themeColor = '#d3166d' } = Astro.props;
+const t = ui[lang];
+const description = Astro.props.description ?? t.meta.description;
+const fullTitle = title ? `${title} · ${site.name}` : t.meta.title;
+const alternates = langs.map((l) => ({ lang: l, href: new URL(switchPath(Astro.url.pathname, l), site.url).href }));
 const canonical = new URL(Astro.url.pathname, site.url).href;
 const shareImage = new URL(image ?? '/og.jpg', site.url).href;
 ---
 
 <!doctype html>
-<html lang="en" data-mode="inside">
+<html lang={lang} data-mode="inside">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -34,7 +39,11 @@ const shareImage = new URL(image ?? '/og.jpg', site.url).href;
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
+    {alternates.map((a) => <link rel="alternate" hreflang={a.lang} href={a.href} />)}
+    <link rel="alternate" hreflang="x-default" href={alternates[0].href} />
+
     <meta property="og:site_name" content={site.name} />
+    <meta property="og:locale" content={t.ogLocale} />
     <meta property="og:type" content="website" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />

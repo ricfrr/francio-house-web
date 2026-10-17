@@ -6,11 +6,14 @@ import { formatShort, formatYear } from '../lib/time';
 import Icon from './Icon.astro';
 import Jaw from './decor/Jaw.astro';
 import StringLights from './decor/StringLights.astro';
+import { ui, type Lang } from '../i18n/ui';
 
 interface Props {
+  lang: Lang;
   events: HouseEvent[];
 }
-const { events } = Astro.props;
+const { lang, events } = Astro.props;
+const t = ui[lang];
 
 const years = [...new Set(events.map((e) => formatYear(e.start)))];
 const byYear = years.map((year) => ({ year, events: events.filter((e) => formatYear(e.start) === year) }));
@@ -22,19 +25,18 @@ const first = events.at(-1);
   <StringLights tone="fairy" class="archive__lights" />
 
   <div class="wrap archive__head">
-    <p class="room-kicker">Room 3 · the blue room</p>
-    <h2 id="archive-title" class="room-title">the house<br />archive</h2>
+    <p class="room-kicker">{t.archive.kicker}</p>
+    <h2 id="archive-title" class="room-title">{t.archive.title[0]}<br />{t.archive.title[1]}</h2>
     <div class="archive__intro">
       <p>
-        Every night that happened here: the posters, a few blurry photos, and recordings when someone remembered to press
-        record.
-        {first && <> {events.length} nights since {formatYear(first.start)}.</>}
+        {t.archive.intro}
+        {first && <> {t.archive.count(events.length, formatYear(first.start))}</>}
       </p>
       {
         years.length > 1 && (
-          <div class="filters" role="group" aria-label="Show year" data-filters>
+          <div class="filters" role="group" aria-label={t.archive.filter} data-filters>
             <button type="button" class="chip" aria-pressed="true" data-filter="all">
-              All
+              {t.archive.all}
             </button>
             {years.map((y) => (
               <button type="button" class="chip" aria-pressed="false" data-filter={y}>
@@ -63,7 +65,7 @@ const first = events.at(-1);
               <a class="tile__main" href={e.url}>
                 <Image
                   src={e.poster}
-                  alt={e.posterAlt ?? `Poster for ${e.artist}`}
+                  alt={e.posterAlt}
                   widths={[280, 420, 600]}
                   sizes="(min-width: 1100px) 22vw, (min-width: 640px) 40vw, 80vw"
                   loading="lazy"
@@ -78,7 +80,7 @@ const first = events.at(-1);
                 <span class="tile__badges">
                   {e.recordings.slice(0, 1).map((r) => (
                     <a class="tile__badge" href={r.url} target="_blank" rel="noopener" aria-label={`${r.label}, ${e.artist}`}>
-                      <Icon name="play" /> listen
+                      <Icon name="play" /> {t.archive.listen}
                     </a>
                   ))}
                   {e.photos.length > 0 && (
@@ -98,7 +100,7 @@ const first = events.at(-1);
                 <a class="tile__main" href={e.url}>
                   <Image
                     src={photo}
-                    alt={`Photo from ${e.artist}, ${formatShort(e.start)}`}
+                    alt={t.event.photoAlt(e.artist, formatShort(e.start))}
                     widths={[280, 420, 600]}
                     sizes="(min-width: 1100px) 22vw, (min-width: 640px) 40vw, 80vw"
                     loading="lazy"

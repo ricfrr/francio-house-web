@@ -3,6 +3,7 @@ import { Image } from 'astro:assets';
 import type { HouseEvent } from '../lib/events';
 import { formatDayMonth, formatWeekday, formatLong } from '../lib/time';
 import { site } from '../site.config';
+import { ui, type Lang } from '../i18n/ui';
 import EventLinks from './EventLinks.astro';
 import Icon from './Icon.astro';
 import Fringe from './decor/Fringe.astro';
@@ -11,10 +12,12 @@ import Macaw from './decor/Macaw.astro';
 import Leaf from './decor/Leaf.astro';
 
 interface Props {
+  lang: Lang;
   /** The next few upcoming events. The first one that hasn't ended is shown. */
   candidates: HouseEvent[];
 }
-const { candidates } = Astro.props;
+const { lang, candidates } = Astro.props;
+const t = ui[lang];
 const isUrl = (s?: string) => !!s && /^(https?:|mailto:)/.test(s);
 ---
 
@@ -40,7 +43,7 @@ const isUrl = (s?: string) => !!s && /^(https?:|mailto:)/.test(s);
     }
   </div>
 
-  <h2 id="next-title" class="sr-only">Next at the house</h2>
+  <h2 id="next-title" class="sr-only">{t.next.heading}</h2>
 
   {
     candidates.map((e, i) => (
@@ -52,7 +55,7 @@ const isUrl = (s?: string) => !!s && /^(https?:|mailto:)/.test(s);
             <a href={e.url} tabindex="-1" aria-hidden="true">
               <Image
                 src={e.poster}
-                alt={e.posterAlt ?? `Poster for ${e.artist}`}
+                alt={e.posterAlt}
                 widths={[420, 640, 900, 1200]}
                 sizes="(min-width: 960px) 38vw, 82vw"
                 loading={i === 0 ? 'eager' : 'lazy'}
@@ -64,14 +67,14 @@ const isUrl = (s?: string) => !!s && /^(https?:|mailto:)/.test(s);
         </div>
 
         <div class="hero__info">
-          <p class="hero__tag hand">next at the house ↘</p>
+          <p class="hero__tag hand">{t.next.tag}</p>
           <p class="hero__when mono">
             <time datetime={e.start.toISOString()}>
-              <span class="hero__day">{formatWeekday(e.start)}</span>
-              <span class="hero__date">{formatDayMonth(e.start)}</span>
+              <span class="hero__day">{formatWeekday(e.start, lang)}</span>
+              <span class="hero__date">{formatDayMonth(e.start, lang)}</span>
             </time>
             <span class="hero__rel" data-rel={e.start.toISOString()} data-rel-end={e.end.toISOString()}>
-              {formatLong(e.start)}
+              {formatLong(e.start, lang)}
             </span>
           </p>
           <h3 class="hero__artist">
@@ -85,43 +88,43 @@ const isUrl = (s?: string) => !!s && /^(https?:|mailto:)/.test(s);
           <dl class="stub">
             {e.doors && (
               <div>
-                <dt>Doors</dt>
+                <dt>{t.next.doors}</dt>
                 <dd>{e.doors}</dd>
               </div>
             )}
             <div>
-              <dt>Music</dt>
+              <dt>{t.next.music}</dt>
               <dd>{e.time}</dd>
             </div>
             <div class="stub__wide">
-              <dt>Entry</dt>
+              <dt>{t.next.entry}</dt>
               <dd>{e.entry}</dd>
             </div>
             <div class="stub__wide">
-              <dt>Where</dt>
-              <dd>{site.whereNote}</dd>
+              <dt>{t.next.where}</dt>
+              <dd>{t.event.where}</dd>
             </div>
           </dl>
 
           <div class="hero__actions">
             {isUrl(e.rsvp) ? (
               <a class="btn btn--sun" href={e.rsvp} target="_blank" rel="noopener">
-                RSVP
+                {t.next.rsvp}
                 <Icon name="arrow" />
               </a>
             ) : (
               e.rsvp && <p class="hero__rsvp mono">{e.rsvp}</p>
             )}
             <a class="btn btn--light" href={e.url}>
-              Full details
+              {t.next.details}
             </a>
-            <a class="btn btn--ghost" href={`/events/${e.slug}.ics`} download>
+            <a class="btn btn--ghost" href={e.icsUrl} download>
               <Icon name="calendar" />
-              Add to calendar
+              {t.next.calendar}
             </a>
           </div>
 
-          <EventLinks links={e.links} artist={e.artist} class="hero__links" />
+          <EventLinks links={e.links} label={t.event.online(e.artist)} lang={lang} class="hero__links" />
         </div>
       </article>
     ))
@@ -129,14 +132,12 @@ const isUrl = (s?: string) => !!s && /^(https?:|mailto:)/.test(s);
 
   <article class="hero__slot hero__empty" data-slot-empty hidden={candidates.length > 0}>
     <div class="hero__info">
-      <p class="hero__tag hand">shhh…</p>
-      <h3 class="hero__artist">The house is resting.</h3>
-      <p class="hero__summary">
-        No concerts on the calendar right now. New dates usually appear on Instagram first — or have a look around the archive.
-      </p>
+      <p class="hero__tag hand">{t.next.emptyTag}</p>
+      <h3 class="hero__artist">{t.next.emptyTitle}</h3>
+      <p class="hero__summary">{t.next.emptyText}</p>
       <div class="hero__actions">
-        <a class="btn btn--sun" href={site.contact.instagram} target="_blank" rel="noopener">Follow {site.contact.instagramHandle}</a>
-        <a class="btn btn--light" href="#archive">The archive</a>
+        <a class="btn btn--sun" href={site.contact.instagram} target="_blank" rel="noopener">{t.next.follow} {site.contact.instagramHandle}</a>
+        <a class="btn btn--light" href="#archive">{t.next.archive}</a>
       </div>
     </div>
   </article>

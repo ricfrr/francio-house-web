@@ -1,0 +1,44 @@
+---
+import Base from '../layouts/Base.astro';
+import Outside from '../components/Outside.astro';
+import Topbar from '../components/Topbar.astro';
+import NextEvent from '../components/NextEvent.astro';
+import Upcoming from '../components/Upcoming.astro';
+import Archive from '../components/Archive.astro';
+import HouseRoom from '../components/HouseRoom.astro';
+import Footer from '../components/Footer.astro';
+import JungleSprite from '../components/decor/JungleSprite.astro';
+import { getSplitEvents } from '../lib/events';
+import { ui, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = ui[lang];
+const { upcoming, past } = await getSplitEvents(lang);
+// A few candidates for the hero, in case the next one ends before the next rebuild.
+const candidates = upcoming.slice(0, 3);
+---
+
+<Base lang={lang} intro>
+  <a class="skip-link" href="#next">{t.meta.skipToNext}</a>
+  <Outside lang={lang} />
+  <JungleSprite />
+  <div id="interior">
+    <Topbar lang={lang} home />
+    <main>
+      <h1 class="sr-only">{t.meta.h1}</h1>
+      <NextEvent lang={lang} candidates={candidates} />
+      <Upcoming lang={lang} events={upcoming.slice(1)} />
+      <Archive lang={lang} events={past} />
+      <HouseRoom lang={lang} />
+    </main>
+    <Footer lang={lang} home />
+  </div>
+</Base>
+
+<script>
+  import { initInside } from '../scripts/inside';
+  initInside();
+</script>

@@ -3,16 +3,23 @@ import Base from '../layouts/Base.astro';
 import Topbar from '../components/Topbar.astro';
 import JungleSprite from '../components/decor/JungleSprite.astro';
 import OwlFace from '../components/decor/OwlFace.astro';
+import { ui } from '../i18n/ui';
+// GitHub Pages serves this one page for every missing address, so it speaks both languages.
+const { it, en } = ui;
 ---
 
-<Base title="Wrong door">
+<Base lang="it" title="Porta sbagliata · Wrong door">
   <JungleSprite />
-  <Topbar />
+  <Topbar lang="it" langHref="/en/" />
   <main class="room lost">
     <OwlFace />
-    <h1 class="room-title">wrong<br />door</h1>
-    <p>This room doesn't exist — or the party moved somewhere else.</p>
-    <a class="btn btn--sun" href="/">Back inside</a>
+    <h1 class="room-title">{it.lost.title[0]}<br />{it.lost.title[1]}</h1>
+    <p>{it.lost.text}</p>
+    <p lang="en" class="lost__en">{en.lost.text}</p>
+    <div class="lost__actions">
+      <a class="btn btn--sun" href="/">{it.lost.back}</a>
+      <a class="btn btn--light" href="/en/" lang="en">{en.lost.back}</a>
+    </div>
   </main>
 </Base>
 
@@ -31,6 +38,23 @@ import OwlFace from '../components/decor/OwlFace.astro';
     gap: 20px;
     padding: 120px var(--gutter) 80px;
     text-align: center;
+  }
+
+  .lost p {
+    margin: 0;
+  }
+
+  .lost__en {
+    opacity: 0.7;
+    font-style: italic;
+  }
+
+  .lost__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 8px;
   }
 
   .lost :global(.owl) {

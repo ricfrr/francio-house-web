@@ -30,7 +30,8 @@ export function initOutside() {
   let progress = 0;
 
   const isOutside = () => html.dataset.mode === 'outside';
-  const still = () => reducedMotion.matches || html.dataset.motion === 'reduced';
+  /** Reduced motion: the same 3D house, as a still picture; going in is a fade. */
+  const still = () => reducedMotion.matches;
 
   function scrollProgress() {
     const max = document.documentElement.scrollHeight - window.innerHeight;
@@ -50,17 +51,16 @@ export function initOutside() {
   }
 
   function onFrame(f: StreetFrame) {
-    paint(f.progress);
+    if (!still()) paint(f.progress);
   }
 
   async function ensureStreet(): Promise<Street | null> {
     if (street) return street;
-    if (still()) return null;
     loading ??= import('./street')
       .then(({ createStreet }) => {
         const s = createStreet(canvas!);
         s.onFrame(onFrame);
-        s.setTarget(scrollProgress(), true);
+        s.setTarget(still() ? 0 : scrollProgress(), true);
         s.start();
         // show the canvas once it has drawn a frame
         requestAnimationFrame(() => requestAnimationFrame(() => outside!.classList.add('is-3d')));
@@ -68,8 +68,9 @@ export function initOutside() {
         return s;
       })
       .catch((err) => {
-        console.warn('Street scene unavailable, using the flat facade.', err);
-        html.dataset.motion = 'reduced';
+        // no WebGL (or the scene failed to load): skip the street and open the door
+        console.warn('Street scene unavailable, going straight inside.', err);
+        finish();
         return null;
       })
       .finally(() => {
@@ -81,13 +82,12 @@ export function initOutside() {
   function onScroll() {
     if (!isOutside() || autoplay) return;
     const p = scrollProgress();
-    if (street) {
-      street.setTarget(p);
-    } else if (still()) {
+    if (still()) {
       // no camera move: the street simply fades away
       outside!.style.opacity = String(1 - smooth(0.1, 0.95, p));
-      captions[0]?.classList.add('is-on');
       if (p >= 0.97) finish();
+    } else {
+      street?.setTarget(p);
     }
   }
 
@@ -99,7 +99,7 @@ export function initOutside() {
 
   function enter() {
     if (!isOutside()) return;
-    if (!street) return leave();
+    if (!street || still()) return leave();
     if (autoplay) return;
     html.classList.add('is-autoplay');
     const from = progress;
@@ -147,10 +147,7 @@ export function initOutside() {
     house!.inert = true;
     window.scrollTo({ top: 0, behavior: 'instant' });
     paint(0);
-    ensureStreet().then((s) => {
-      s?.setTarget(0, true);
-      if (!s) captions[0]?.classList.add('is-on');
-    });
+    ensureStreet().then((s) => s?.setTarget(0, true));
     bell.focus({ preventScroll: true });
   }
 
@@ -162,9 +159,7 @@ export function initOutside() {
     house.inert = true;
     window.scrollTo(0, 0);
     paint(0);
-    ensureStreet().then((s) => {
-      if (!s) captions[0]?.classList.add('is-on');
-    });
+    ensureStreet();
   }
 
   window.addEventListener('scroll', onScroll, { passive: true });
@@ -179,7 +174,7 @@ export function initOutside() {
   window.addEventListener(
     'pointermove',
     (e) => {
-      if (!street || e.pointerType !== 'mouse') return;
+      if (!street || still() || e.pointerType !== 'mouse') return;
       street.setPointer((e.clientX / window.innerWidth) * 2 - 1, (e.clientY / window.innerHeight) * 2 - 1);
     },
     { passive: true },

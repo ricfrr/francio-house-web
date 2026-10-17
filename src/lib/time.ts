@@ -1,4 +1,5 @@
 import { site } from '../site.config';
+import { ui, type Lang } from '../i18n/ui';
 
 /** Offset of `tz` from UTC at `date`, in minutes. */
 function tzOffset(date: Date, tz: string): number {
@@ -28,12 +29,12 @@ export function zoned(day: string, clock: string, tz: string = site.timezone): D
   return new Date(ts);
 }
 
-const fmt = (opts: Intl.DateTimeFormatOptions) =>
-  new Intl.DateTimeFormat(site.locale, { timeZone: site.timezone, ...opts });
+const fmt = (lang: Lang, opts: Intl.DateTimeFormatOptions) =>
+  new Intl.DateTimeFormat(ui[lang].locale, { timeZone: site.timezone, ...opts });
 
-export const formatWeekday = (d: Date) => fmt({ weekday: 'short' }).format(d);
-export const formatDayMonth = (d: Date) => fmt({ day: 'numeric', month: 'short' }).format(d);
-export const formatLong = (d: Date) =>
-  fmt({ weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(d);
-export const formatYear = (d: Date) => fmt({ year: 'numeric' }).format(d);
-export const formatShort = (d: Date) => fmt({ day: '2-digit', month: '2-digit', year: '2-digit' }).format(d);
+export const formatWeekday = (d: Date, lang: Lang) => fmt(lang, { weekday: 'short' }).format(d).replace('.', '');
+export const formatDayMonth = (d: Date, lang: Lang) => fmt(lang, { day: 'numeric', month: 'short' }).format(d).replace('.', '');
+export const formatLong = (d: Date, lang: Lang) =>
+  fmt(lang, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+export const formatYear = (d: Date) => fmt('it', { year: 'numeric' }).format(d);
+export const formatShort = (d: Date) => fmt('it', { day: '2-digit', month: '2-digit', year: '2-digit' }).format(d);

@@ -2,7 +2,7 @@
 # Copy this file into src/content/events/, rename it to YYYY-MM-DD-artist-name.md
 # and fill it in (or run: npm run new-event -- "Artist Name" YYYY-MM-DD).
 
-title: Name of the night            # e.g. "Notturno Tropicale" (can be the same as artist)
+title: Nome della serata             # e.g. "Notturno Tropicale" (can be the same as artist)
 artist: Artist Name                 # the big name
 lineup: [Support Act, DJ Someone]   # optional, other names on the bill
 genre: dream-pop · tropicália       # optional, one short line
@@ -13,12 +13,12 @@ doors: "20:30"                      # optional
 end: "00:30"                        # optional — after midnight is fine
 
 poster: ./posters/artist-name.jpg   # put the image in src/content/events/posters/
-posterAlt: Describe the poster in one sentence for people who can't see it.
+posterAlt: Descrivi il manifesto in una frase, per chi non può vederlo.
 # color: "#ff3d7f"                  # optional — otherwise picked from the poster
 
-summary: One or two sentences. Shown on cards and when the link is shared.
-entry: Free entry · donations go to the artists
-rsvp: https://www.instagram.com/francio.house/   # a link, or a sentence like "DM us on Instagram"
+summary: Una o due frasi. Compaiono sulle card e quando il link viene condiviso.
+# entry: Ingresso libero · le offerte vanno agli artisti   # optional, this is the default
+rsvp: https://www.instagram.com/francio.house/   # a link, or a sentence like "Scrivici su Instagram"
 
 links:                              # any you have, delete the rest
   spotify: https://open.spotify.com/artist/...
@@ -28,12 +28,25 @@ links:                              # any you have, delete the rest
 
 # After the night:
 # recordings:
-#   - label: Full live set (YouTube)
+#   - label: Il live completo (YouTube)
+#     labelEn: Full live set (YouTube)
 #     url: https://www.youtube.com/watch?v=...
 # photos:
 #   - ./photos/artist-name-1.jpg
 
+# English versions (optional — anything missing is shown in Italian):
+en:
+  title: Name of the night
+  summary: One or two sentences, in English.
+  posterAlt: Describe the poster in one sentence.
+  # genre: ...
+  # entry: Free entry · donations go to the artists
+
 draft: false                        # true = hidden on the live site
 ---
 
-Write the longer description here. Normal Markdown: **bold**, *italic*, [links](https://...).
+Testo lungo in italiano. Markdown normale: **grassetto**, *corsivo*, [link](https://...).
+
+<!-- en -->
+
+The longer description in English. Delete this part (and the line above) if there's no English text.

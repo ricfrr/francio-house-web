@@ -4,24 +4,24 @@ import PosterCard from './PosterCard.astro';
 import Drips from './decor/Drips.astro';
 import Toucan from './decor/Toucan.astro';
 import Leaf from './decor/Leaf.astro';
+import { ui, type Lang } from '../i18n/ui';
 
 interface Props {
+  lang: Lang;
   events: HouseEvent[];
 }
-const { events } = Astro.props;
+const { lang, events } = Astro.props;
+const t = ui[lang].upcoming;
 ---
 
 <section id="upcoming" class="room upcoming" aria-labelledby="upcoming-title">
   <Drips bg="var(--drip-bg)" seed={4} />
   <div class="wrap upcoming__head">
     <div>
-      <p class="room-kicker">Room 2 · the pink wall</p>
-      <h2 id="upcoming-title" class="room-title">coming<br />up</h2>
+      <p class="room-kicker">{t.kicker}</p>
+      <h2 id="upcoming-title" class="room-title">{t.title[0]}<br />{t.title[1]}</h2>
     </div>
-    <p class="upcoming__intro">
-      Posters go up on this wall as soon as a date is confirmed. Every night is small, so if something catches your eye,
-      RSVP early.
-    </p>
+    <p class="upcoming__intro">{t.intro}</p>
     <Toucan class="upcoming__toucan" parallax={0.18} />
   </div>
 
@@ -29,14 +29,14 @@ const { events } = Astro.props;
     events.length > 0 ? (
       <ol class="wall" data-wall>
         {events.map((e, i) => (
-          <PosterCard event={e} index={i} />
+          <PosterCard event={e} index={i} more={t.more} />
         ))}
       </ol>
     ) : (
-      <p class="wrap upcoming__empty hand">Nothing pinned yet — new dates soon.</p>
+      <p class="wrap upcoming__empty hand">{t.empty}</p>
     )
   }
-  <p class="wrap wall__hint mono" aria-hidden="true">← swipe the wall →</p>
+  <p class="wrap wall__hint mono" aria-hidden="true">{t.swipe}</p>
 
   <Leaf kind="palm" class="upcoming__leaf" />
 </section>

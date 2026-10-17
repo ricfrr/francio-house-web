@@ -2,11 +2,15 @@
 import { site } from '../site.config';
 import { terrazzo } from '../lib/decor';
 import Icon from './Icon.astro';
+import { ui, localePath, type Lang } from '../i18n/ui';
 
 interface Props {
+  lang: Lang;
   home?: boolean;
 }
-const { home = false } = Astro.props;
+const { lang, home = false } = Astro.props;
+const t = ui[lang];
+const base = home ? '' : localePath(lang, '/');
 const floor = terrazzo(9);
 const year = new Date().getFullYear();
 ---
@@ -14,14 +18,14 @@ const year = new Date().getFullYear();
 <footer class="floor" style={`--terrazzo:${floor}`}>
   <div class="wrap floor__inner">
     <p class="floor__mark" aria-hidden="true">francio<span>house</span></p>
-    <p class="floor__line">From the street, it's just a white house.</p>
+    <p class="floor__line">{t.footer.line}</p>
     <div class="floor__row">
-      <nav aria-label="Footer">
+      <nav aria-label={t.nav.footer}>
         <ul>
-          <li><a href={home ? '#next' : '/#next'}>Next</a></li>
-          <li><a href={home ? '#upcoming' : '/#upcoming'}>Upcoming</a></li>
-          <li><a href={home ? '#archive' : '/#archive'}>Archive</a></li>
-          <li><a href={home ? '#house' : '/#house'}>The house</a></li>
+          <li><a href={`${base}#next`}>{t.nav.next}</a></li>
+          <li><a href={`${base}#upcoming`}>{t.nav.upcoming}</a></li>
+          <li><a href={`${base}#archive`}>{t.nav.archive}</a></li>
+          <li><a href={`${base}#house`}>{t.nav.house}</a></li>
         </ul>
       </nav>
       <div class="floor__contacts">
@@ -31,16 +35,16 @@ const year = new Date().getFullYear();
       {
         home ? (
           <button class="btn btn--light" type="button" data-go-outside>
-            <Icon name="door" /> Step back outside
+            <Icon name="door" /> {t.footer.outside}
           </button>
         ) : (
-          <a class="btn btn--light" href="/?intro">
-            <Icon name="door" /> Step back outside
+          <a class="btn btn--light" href={`${localePath(lang, '/')}?intro`}>
+            <Icon name="door" /> {t.footer.outside}
           </a>
         )
       }
     </div>
-    <p class="floor__small mono">© {year} {site.name} · a private home, please be kind to the neighbours</p>
+    <p class="floor__small mono">© {year} {site.name} · {t.footer.small}</p>
   </div>
 </footer>
 

@@ -3,7 +3,7 @@ import { getEvents, type HouseEvent } from '../../lib/events';
 import { ics } from '../../lib/calendar';
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const events = await getEvents();
+  const events = await getEvents('it');
   return events.map((event) => ({ params: { slug: event.slug }, props: { event } }));
 };
 

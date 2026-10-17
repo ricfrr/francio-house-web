@@ -133,7 +133,7 @@ export interface Street {
   dispose(): void;
 }
 
-export function createStreet(canvas: HTMLCanvasElement, opts: { still?: boolean } = {}): Street {
+export function createStreet(canvas: HTMLCanvasElement): Street {
   const small = Math.min(window.innerWidth, window.innerHeight) < 700;
   const renderer = new THREE.WebGLRenderer({
     canvas,
@@ -636,7 +636,7 @@ export function createStreet(canvas: HTMLCanvasElement, opts: { still?: boolean 
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     resize();
-    apply(opts.still ? 1 : dt, now);
+    apply(dt, now);
     renderer.render(scene, camera);
   }
 

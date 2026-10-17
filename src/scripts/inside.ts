@@ -3,21 +3,24 @@
  * the site works and reads fine without it.
  */
 
+import { relativeWords } from '../i18n/relative';
+
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
 
 // ---------------- dates: hide what ended since the last build, say "in 3 days" ----------------
 
 function relative(start: Date, end: Date, now: Date): string | null {
-  if (now >= start && now < end) return 'happening now';
+  const w = document.documentElement.lang === 'en' ? relativeWords.en : relativeWords.it;
+  if (now >= start && now < end) return w.now;
   const day = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
   const days = Math.round((day(start) - day(now)) / 86_400_000);
   if (days < 0) return null;
-  if (days === 0) return 'tonight';
-  if (days === 1) return 'tomorrow';
-  if (days < 14) return `in ${days} days`;
-  if (days < 60) return `in ${Math.round(days / 7)} weeks`;
-  return `in ${Math.round(days / 30)} months`;
+  if (days === 0) return w.tonight;
+  if (days === 1) return w.tomorrow;
+  if (days < 14) return w.days(days);
+  if (days < 60) return w.weeks(Math.round(days / 7));
+  return w.months(Math.round(days / 30));
 }
 
 export function refreshDates(now = new Date()) {

@@ -1,6 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import { site } from '../site.config';
+import { ui, type Lang } from '../i18n/ui';
 import Icon from './Icon.astro';
 import OwlFace from './decor/OwlFace.astro';
 import Leaf from './decor/Leaf.astro';
@@ -9,33 +10,27 @@ import owlMural from '../assets/house/owl-mural.jpg';
 import crocMural from '../assets/house/croc-mural.jpg';
 import projection from '../assets/house/projection-night.jpg';
 
-const photos = [
-  { src: livingRoom, caption: 'the living room', alt: 'Living room with a hot pink wall, a mint green wall, parrot paintings, an aquarium and a brass arc lamp.', rot: -4 },
-  { src: owlMural, caption: 'the owls, in the garden', alt: 'A garden shed painted with two huge owls, stone pines and a little bridge.', rot: 3 },
-  { src: projection, caption: 'projection night', alt: 'A performer in a pink wig in front of a projection, under a colourful fringe curtain.', rot: -2 },
-  { src: crocMural, caption: 'the crocodile', alt: 'A pink wall painted with a green crocodile, a toucan and a banana.', rot: 5 },
-];
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = ui[lang].house;
 
-const steps = [
-  ['RSVP', 'Send us a message on Instagram or by email. The address arrives the day before.'],
-  ['Arrive', 'Doors around 20:30, music at 21:00. Walk up the stairs at the side of the house.'],
-  ['Give', 'Most nights are free. There is a hat for the artists — every euro goes to them.'],
-  ['Share', 'Bring something to drink or nibble. Take your empties home with you.'],
-  ['Shh', 'We stop around midnight. Go down the stairs quietly — the neighbours are friends.'],
-];
+const photos = [livingRoom, owlMural, projection, crocMural].map((src, i) => ({
+  src,
+  ...t.photos[i],
+  rot: [-4, 3, -2, 5][i],
+}));
+const steps = t.steps;
 ---
 
 <section id="house" class="room house" aria-labelledby="house-title">
   <div class="house__drip" aria-hidden="true"></div>
   <div class="wrap house__grid">
     <div class="house__text">
-      <p class="room-kicker">Room 4 · the owl wall</p>
-      <h2 id="house-title" class="room-title">the<br />house</h2>
-      <p class="house__lede">
-        Francio House is a home, not a venue. From the street it looks like every other house on the block: white walls, a
-        staircase, a door. Inside, the walls are covered in parrots, owls and crocodiles — and a few times a month the
-        living room becomes a stage for forty people sitting on the floor.
-      </p>
+      <p class="room-kicker">{t.kicker}</p>
+      <h2 id="house-title" class="room-title">{t.title[0]}<br />{t.title[1]}</h2>
+      <p class="house__lede">{t.lede}</p>
     </div>
     <div class="house__owl" aria-hidden="true" data-parallax="0.08">
       <OwlFace />
@@ -46,7 +41,7 @@ const steps = [
 
   <div class="wrap house__cols">
     <div class="house__how">
-      <h3 class="house__h">How a night works</h3>
+      <h3 class="house__h">{t.how}</h3>
       <ol class="steps">
         {
           steps.map(([title, text], i) => (
@@ -63,11 +58,8 @@ const steps = [
       </ol>
     </div>
     <aside class="house__play" data-reveal>
-      <h3 class="house__h">Play here</h3>
-      <p>
-        We host touring and local artists of any genre that fits in a living room — acoustic, electronic, loud, very quiet.
-        Send us a link and a few lines about you.
-      </p>
+      <h3 class="house__h">{t.play}</h3>
+      <p>{t.playText}</p>
       <div class="house__contacts">
         <a class="btn btn--sun" href={`mailto:${site.contact.email}`}>
           <Icon name="mail" />
@@ -81,7 +73,7 @@ const steps = [
     </aside>
   </div>
 
-  <ul class="wrap snaps" aria-label="Photos of the house">
+  <ul class="wrap snaps" aria-label={t.photosLabel}>
     {
       photos.map((p, i) => (
         <li style={`--rot:${p.rot}deg;--reveal-delay:${i * 0.08}s`} data-reveal>

@@ -1,67 +1,36 @@
 ---
 // The street: the first thing visitors see. Hidden for returning visitors (see Base.astro)
 // and when JavaScript is off, in which case the site simply starts inside.
-const captions = [
-  { from: 0, to: 0.15, text: "From the street, it's just a white house." },
-  { from: 0.19, to: 0.34, text: 'White walls. Shutters half down. Nothing to see.' },
-  { from: 0.39, to: 0.55, text: 'Eighteen steps up the side.' },
-  { from: 0.6, to: 0.73, text: 'Listen. Something on the other side.' },
-  { from: 0.76, to: 0.86, text: 'Come in.' },
+import { ui, switchPath, type Lang } from '../i18n/ui';
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = ui[lang];
+const timing = [
+  [0, 0.15],
+  [0.19, 0.34],
+  [0.39, 0.55],
+  [0.6, 0.73],
+  [0.76, 0.86],
 ];
+const captions = t.outside.captions.map((text, i) => ({ text, from: timing[i][0], to: timing[i][1] }));
+const other = t.lang.other;
 ---
 
-<div id="outside" class="outside" data-outside role="region" aria-label="Outside the house">
-  <svg class="outside__facade" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
-    <defs>
-      <linearGradient id="facade-sky" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#1b5fe0"></stop>
-        <stop offset="0.75" stop-color="#9fd0ff"></stop>
-      </linearGradient>
-    </defs>
-    <rect width="1600" height="1000" fill="url(#facade-sky)"></rect>
-    <g fill="#3f5f31">
-      <ellipse cx="200" cy="560" rx="150" ry="46"></ellipse>
-      <ellipse cx="1380" cy="520" rx="170" ry="50"></ellipse>
-      <ellipse cx="1290" cy="560" rx="110" ry="36"></ellipse>
-    </g>
-    <path d="M196 560v220M1376 520v260" stroke="#5a4436" stroke-width="12"></path>
-    <rect y="760" width="1600" height="240" fill="#a8a27f"></rect>
-    <path d="M380 760h900l140 240H220Z" fill="#cbc5ba"></path>
-    <!-- side wall with the stairs -->
-    <path d="M430 372 560 330v430l-130-22Z" fill="#e4e0d8"></path>
-    <path d="M430 470h44v92h-44Z" fill="#6b4a37"></path>
-    <path class="outside__facade-gap" d="M430 560h44v4h-44Z" fill="#ff2f8c"></path>
-    <path d="M560 760l-30 0-10-14-10 0-10-14-10 0-10-14-10 0-10-14-10 0-10-14-10 0-10-14-10 0-10-14-10 0-10-14v198Z" fill="#c8c4bb"></path>
-    <path d="M560 668 420 566M560 690 420 588M560 712 420 610M560 734 420 632" stroke="#f6f6f2" stroke-width="4"></path>
-    <path d="M410 560h40v-2" stroke="#f6f6f2" stroke-width="4"></path>
-    <!-- front -->
-    <rect x="560" y="330" width="600" height="430" fill="#f3f0ea"></rect>
-    <path d="M520 320 860 268 1200 320Z" fill="#8a5a43"></path>
-    <rect x="520" y="318" width="680" height="16" fill="#5b3a2a"></rect>
-    <rect x="975" y="236" width="34" height="86" fill="#f3f0ea"></rect>
-    <rect x="968" y="232" width="48" height="8" fill="#5b3a2a"></rect>
-    <g fill="#1d242c">
-      <rect x="650" y="408" width="62" height="118"></rect>
-      <rect x="1010" y="408" width="62" height="118"></rect>
-      <rect x="610" y="610" width="140" height="132"></rect>
-      <rect x="950" y="598" width="160" height="150"></rect>
-    </g>
-    <g fill="#d9d6cf">
-      <rect x="650" y="408" width="62" height="48"></rect>
-      <rect x="1010" y="408" width="62" height="48"></rect>
-    </g>
-    <path d="M610 654h140M610 698h140M645 610v132M680 610v132M715 610v132" stroke="#f7f6f2" stroke-width="4"></path>
-    <path d="M972 598v150M994 598v150M1016 598v150M1038 598v150M1060 598v150M1082 598v150" stroke="#2a2b2e" stroke-width="4"></path>
-    <rect x="545" y="542" width="630" height="14" fill="#efece6"></rect>
-    <path d="M545 492h630M545 506h630M545 520h630M545 534h630M545 486h630" stroke="#f6f6f2" stroke-width="4"></path>
-    <path d="M548 486v56M708 486v56M868 486v56M1028 486v56M1172 486v56" stroke="#f6f6f2" stroke-width="5"></path>
-  </svg>
-
+<div id="outside" class="outside" data-outside role="region" aria-label={t.outside.region}>
+  <!-- plain sky while the 3D street loads; it must be hidden afterwards, or it would cover the view through the door -->
+  <div class="outside__sky" aria-hidden="true"></div>
   <canvas class="outside__canvas" data-street-canvas aria-hidden="true"></canvas>
 
   <div class="outside__ui">
-    <p class="outside__plate mono" aria-hidden="true">francio.house</p>
-    <button class="outside__skip mono" type="button" data-skip>Skip intro <span aria-hidden="true">→</span></button>
+    <div class="outside__top">
+      <p class="outside__plate mono" aria-hidden="true">francio.house</p>
+      <a class="outside__lang mono" href={`${switchPath(Astro.url.pathname, other)}?intro`} hreflang={other} lang={other} aria-label={t.lang.switchLabel}>
+        {t.lang.short}
+      </a>
+    </div>
+    <button class="outside__skip mono" type="button" data-skip>{t.outside.skip} <span aria-hidden="true">→</span></button>
 
     <div class="outside__captions" aria-hidden="true">
       {
@@ -77,9 +46,9 @@ const captions = [
       <button class="bell" type="button" data-enter>
         <span class="bell__label" aria-hidden="true">FRANCIO</span>
         <span class="bell__button" aria-hidden="true"></span>
-        <span class="bell__text">Enter the house</span>
+        <span class="bell__text">{t.outside.enter}</span>
       </button>
-      <p class="outside__hint mono" aria-hidden="true">or scroll to walk up <span>↓</span></p>
+      <p class="outside__hint mono" aria-hidden="true">{t.outside.hint} <span>↓</span></p>
     </div>
   </div>
 </div>
@@ -114,7 +83,7 @@ const captions = [
     opacity: 0;
   }
 
-  .outside__facade,
+  .outside__sky,
   .outside__canvas {
     position: absolute;
     inset: 0;
@@ -122,21 +91,8 @@ const captions = [
     height: 100%;
   }
 
-  .outside__facade {
-    transition: opacity 0.8s;
-  }
-
-  .outside__facade-gap {
-    animation: gap 0.536s steps(1) infinite;
-  }
-
-  @keyframes gap {
-    0% {
-      fill: #ff2f8c;
-    }
-    50% {
-      fill: #36e08f;
-    }
+  .outside__sky {
+    background: linear-gradient(#1b5fe0, #9fd0ff 70%, #a8a27f 70%);
   }
 
   .outside__canvas {
@@ -148,8 +104,8 @@ const captions = [
     opacity: 1;
   }
 
-  /* the fallback must disappear entirely, or it would cover the view through the door */
-  .outside.is-3d .outside__facade {
+  /* the sky must disappear entirely once the street is drawn, or it would cover the view through the door */
+  .outside.is-3d .outside__sky {
     visibility: hidden;
     transition: visibility 0s linear 0.9s;
   }
@@ -166,10 +122,37 @@ const captions = [
     pointer-events: auto;
   }
 
-  .outside__plate {
+  .outside__top {
     position: absolute;
-    top: max(18px, env(safe-area-inset-top));
+    top: max(16px, env(safe-area-inset-top));
     left: var(--gutter);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .outside__lang {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 1.5px solid rgb(255 255 255 / 0.8);
+    border-radius: 50%;
+    background: rgb(0 0 0 / 0.12);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .outside__lang:hover {
+    background: #fff;
+    color: var(--ink);
+  }
+
+  .outside__plate {
     margin: 0;
     padding: 6px 10px;
     font-size: 0.78rem;

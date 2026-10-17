@@ -1,0 +1,16 @@
+---
+import EventPage from '../../../views/EventPage.astro';
+import { getEvents } from '../../../lib/events';
+
+export async function getStaticPaths() {
+  const events = await getEvents('en');
+  return events.map((event, i) => ({
+    params: { slug: event.slug },
+    props: { event, prev: events[i - 1], next: events[i + 1] },
+  }));
+}
+
+const { event, prev, next } = Astro.props;
+---
+
+<EventPage lang="en" event={event} prev={prev} next={next} />

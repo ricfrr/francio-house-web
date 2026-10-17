@@ -1,24 +1,27 @@
 ---
 import Icon from './Icon.astro';
-import { linkLabels } from '../lib/events';
+import { linkLabel } from '../lib/events';
+import type { Lang } from '../i18n/ui';
 
 interface Props {
   links: Record<string, string>;
-  artist: string;
+  /** Accessible name of the list, e.g. "Marea Alta online". */
+  label: string;
+  lang: Lang;
   class?: string;
 }
-const { links, artist, class: className = '' } = Astro.props;
+const { links, label, lang, class: className = '' } = Astro.props;
 const entries = Object.entries(links);
 ---
 
 {
   entries.length > 0 && (
-    <ul class:list={['links', className]} aria-label={`${artist} online`}>
+    <ul class:list={['links', className]} aria-label={label}>
       {entries.map(([key, url]) => (
         <li>
           <a class="chip" href={url} target="_blank" rel="noopener">
             <Icon name={key} />
-            {linkLabels[key] ?? key}
+            {linkLabel(key, lang)}
           </a>
         </li>
       ))}

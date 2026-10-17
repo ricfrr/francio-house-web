@@ -7,8 +7,10 @@ import { formatDayMonth, formatWeekday } from '../lib/time';
 interface Props {
   event: HouseEvent;
   index: number;
+  /** "details →" */
+  more: string;
 }
-const { event: e, index } = Astro.props;
+const { event: e, index, more } = Astro.props;
 const rot = seeded(e.slug, -2.6, 2.6).toFixed(2);
 const tapeRot = seeded(e.slug + 't', -9, 9).toFixed(1);
 ---
@@ -19,7 +21,7 @@ const tapeRot = seeded(e.slug + 't', -9, 9).toFixed(1);
       <span class="tape" style={`left:50%;top:-12px;transform:translateX(-50%) rotate(${tapeRot}deg)`}></span>
       <Image
         src={e.poster}
-        alt={e.posterAlt ?? `Poster for ${e.artist}`}
+        alt={e.posterAlt}
         widths={[320, 480, 720]}
         sizes="(min-width: 1100px) 26vw, (min-width: 700px) 40vw, 72vw"
         loading="lazy"
@@ -28,13 +30,13 @@ const tapeRot = seeded(e.slug + 't', -9, 9).toFixed(1);
     </figure>
     <div class="card__label">
       <p class="card__when mono">
-        <time datetime={e.start.toISOString()}>{formatWeekday(e.start)} {formatDayMonth(e.start)}</time>
+        <time datetime={e.start.toISOString()}>{formatWeekday(e.start, e.lang)} {formatDayMonth(e.start, e.lang)}</time>
         <span>· {e.time}</span>
       </p>
       <h3 class="card__artist">{e.artist}</h3>
       {e.title !== e.artist && <p class="card__title">{e.title}</p>}
       {e.genre && <p class="card__genre mono">{e.genre}</p>}
-      <span class="card__more mono" aria-hidden="true">details →</span>
+      <span class="card__more mono" aria-hidden="true">{more}</span>
     </div>
   </a>
 </li>

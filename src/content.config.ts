@@ -43,16 +43,36 @@ const events = defineCollection({
         .regex(/^#[0-9a-fA-F]{6}$/, 'Use a hex colour like "#ff3d7f"')
         .optional(),
 
-      entry: z.string().default('Free entry · donations go to the artists'),
+      /** Leave out for "free entry, donations go to the artists". */
+      entry: z.string().optional(),
       /** A link (Instagram DM, form, email…) or a sentence. */
       rsvp: z.string().optional(),
 
       /** Any of: spotify, instagram, website, bandcamp, soundcloud, youtube, tickets — or your own label. */
       links: z.record(z.string(), z.string().url()).default({}),
       /** Past events: recordings, videos, live sets. */
-      recordings: z.array(z.object({ label: z.string(), url: z.string().url() })).default([]),
+      recordings: z
+        .array(z.object({ label: z.string(), labelEn: z.string().optional(), url: z.string().url() }))
+        .default([]),
       /** Photos from the night, stored next to the posters. */
       photos: z.array(image()).default([]),
+
+      /**
+       * English versions of the texts above. Anything left out falls back to Italian.
+       * The English description goes in the body, after a line with <!-- en -->.
+       */
+      en: z
+        .object({
+          title: z.string(),
+          genre: z.string(),
+          summary: z.string(),
+          posterAlt: z.string(),
+          entry: z.string(),
+          rsvp: z.string(),
+          lineup: z.array(z.string()),
+        })
+        .partial()
+        .default({}),
 
       /** Set to true to hide an event without deleting it. */
       draft: z.boolean().default(false),

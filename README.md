@@ -10,6 +10,7 @@ the next concert, posters pinned to the wall, and an archive of every night that
 - **Events are Markdown files.** Add a poster and a small text file, push, and the site rebuilds.
 - **The street scene** is a small [three.js](https://threejs.org) scene built from code (no 3D models
   to download). It only loads for first-time visitors.
+- **Bilingual:** Italian at `francio.house/`, English at `francio.house/en/`, with an IT/EN switch on every page.
 - **Hosted on GitHub Pages** at `francio.house`, deployed by GitHub Actions.
 
 ---
@@ -18,6 +19,7 @@ the next concert, posters pinned to the wall, and an archive of every night that
 
 1. [Run it locally](#run-it-locally)
 2. [Add a concert](#add-a-concert)
+   - [Italian and English](#italian-and-english)
 3. [Edit, hide or remove a concert](#edit-hide-or-remove-a-concert)
 4. [Posters and photos](#posters-and-photos)
 5. [How dates work](#how-dates-work)
@@ -51,6 +53,7 @@ Open http://localhost:4321. The page reloads as you edit files.
 
 Useful URLs while testing:
 
+- `/en/`: the English version.
 - `/?intro`: always show the street intro, even if you've been inside before.
 - `/?inside`: skip the intro.
 
@@ -89,28 +92,52 @@ time: "21:00"
 doors: "20:30"
 end: "00:30"
 poster: ./posters/marea-alta.jpg
-posterAlt: Wavy psychedelic stripes with the words Marea Alta melting across the middle.
-summary: A four-piece from the coast with a weakness for Brazilian records and broken drum machines.
-entry: Free entry · hat goes round for the band
+posterAlt: Strisce psichedeliche ondulate con la scritta Marea Alta che si scioglie al centro.
+summary: Un quartetto della costa con un debole per i dischi brasiliani e le drum machine rotte.
+entry: Ingresso libero · il cappello gira per la band
 rsvp: https://www.instagram.com/francio.house/
 links:
   spotify: https://open.spotify.com/artist/...
   instagram: https://www.instagram.com/...
   bandcamp: https://....bandcamp.com/
+en:
+  posterAlt: Wavy psychedelic stripes with the words Marea Alta melting across the middle.
+  summary: A four-piece from the coast with a weakness for Brazilian records and broken drum machines.
+  entry: Free entry · hat goes round for the band
 ---
 
-The longer description goes here, in normal Markdown.
+Il testo lungo in italiano, in Markdown normale.
+
+<!-- en -->
+
+The longer description in English.
 ```
 
 4. Commit and push to `main`. The site is live again about a minute later.
 
 The full template with comments is in [`scripts/event-template.md`](scripts/event-template.md).
 
+### Italian and English
+
+Italian is the main language: the normal fields (`title`, `summary`, `posterAlt`, `entry`, …) and the text
+are in Italian. For the English page (`/en/events/…`):
+
+- put the English versions of any field under `en:` — `title`, `summary`, `posterAlt`, `entry`,
+  `genre`, `rsvp`, `lineup`;
+- write the English description **after a line containing only `<!-- en -->`**;
+- recordings can have an English label with `labelEn`.
+
+Everything is optional: whatever has no English version is simply shown in Italian on the English page.
+Names, dates, links, posters and photos are shared by both languages.
+
+Interface texts (menus, buttons, "the house" section, the captions on the street…) are all in
+[`src/i18n/ui.ts`](src/i18n/ui.ts), Italian first and English below.
+
 ### All the fields
 
 | Field | Required | Notes |
 | --- | --- | --- |
-| `title` | yes | Name of the night. Can be the same as `artist`. |
+| `title` | yes | Name of the night (Italian). Can be the same as `artist`. |
 | `artist` | yes | The headliner; shown biggest. |
 | `lineup` | | Other names on the bill: `[Name One, Name Two]`. |
 | `genre` | | One short line. |
@@ -122,11 +149,12 @@ The full template with comments is in [`scripts/event-template.md`](scripts/even
 | `posterAlt` | | One sentence describing the poster, for screen readers. Strongly recommended. |
 | `color` | | Accent colour like `"#ff3d7f"`. If left out, it's picked from the poster automatically. |
 | `summary` | yes | One or two sentences. Used on cards and in link previews (WhatsApp, Instagram…). |
-| `entry` | | Default: "Free entry · donations go to the artists". |
+| `entry` | | Default: "Ingresso libero · le offerte vanno agli artisti" / "Free entry · donations go to the artists". |
 | `rsvp` | | A link (`https://…` or `mailto:…`) shows an RSVP button. Plain text is shown as-is. |
 | `links` | | Any of `spotify`, `instagram`, `website`, `bandcamp`, `soundcloud`, `youtube`, `applemusic`, `tickets`. Other names work too and are shown as written. |
-| `recordings` | | For past events: a list of `label` + `url`. Shows a "listen" badge in the archive. |
+| `recordings` | | For past events: a list of `label` (+ optional `labelEn`) + `url`. Shows a "listen" badge in the archive. |
 | `photos` | | For past events: a list of image paths, e.g. `./photos/marea-alta-1.jpg`. |
+| `en` | | English versions of `title`, `summary`, `posterAlt`, `entry`, `genre`, `rsvp`, `lineup`. |
 | `draft` | | `true` hides the event on the live site (it still shows in `npm run dev`). |
 
 If something is wrong (a missing poster, a date in the wrong format), `npm run build` stops and
@@ -180,12 +208,10 @@ the live site: the previous version simply stays online.
 `src/site.config.ts` holds the things that aren't events:
 
 - contact email and Instagram (**currently placeholders: replace them**),
-- the "where" note shown on every event ("the address is sent when you RSVP"),
-- time zone, date language, default event length.
+- time zone and default event length.
 
-Texts on the home page live in the components:
-`src/components/HouseRoom.astro` ("the house", how a night works, play here),
-`src/components/Outside.astro` (the captions on the street).
+All interface texts, in both languages, are in `src/i18n/ui.ts`: the "where" note shown on every
+event, the "the house" section, how a night works, the captions on the street, buttons and menus.
 
 ---
 
@@ -231,10 +257,10 @@ src/
   content/events/          ← one .md per event, + posters/ and photos/
   content.config.ts        ← the list of event fields and their rules
   site.config.ts           ← contacts, time zone, defaults
-  pages/
-    index.astro            ← the home page: street, next, coming up, archive, the house
-    events/[slug].astro    ← one page per event
-    events/[slug].ics.ts   ← "add to calendar" file per event
+  i18n/ui.ts               ← every interface text, Italian + English
+  views/Home.astro         ← the home page: street, next, coming up, archive, the house
+  views/EventPage.astro    ← one page per event
+  pages/                   ← the addresses: / and /en/, /events/… and /en/events/…
   components/
     Outside.astro          ← the street: captions, doorbell, fallback drawing
     intro/street.ts        ← the three.js scene (house, stairs, door, camera path)
@@ -278,8 +304,8 @@ Performance:
 | First visit | The street. Scroll to walk up the stairs, or press **Enter the house** on the doorbell. **Skip intro** (top right, or Esc) goes straight in. |
 | Has been inside before | Starts inside. **Step outside** (top right / footer) replays the street. |
 | Follows a link to a section (`/#archive`) or an event page | Starts inside. |
-| Prefers reduced motion | A still drawing of the house; entering is a simple fade. All decorative animation is off. |
-| No WebGL / old device | Same still drawing and fade. |
+| Prefers reduced motion | The same 3D house as a still picture; entering is a simple fade. All decorative animation is off. |
+| No WebGL / old device | Starts inside. |
 | JavaScript disabled | The full site, no intro. |
 
 ---

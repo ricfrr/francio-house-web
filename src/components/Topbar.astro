@@ -1,21 +1,28 @@
 ---
 import Icon from './Icon.astro';
+import { ui, localePath, switchPath, type Lang } from '../i18n/ui';
 interface Props {
+  lang: Lang;
   /** On the home page "step outside" replays the street; elsewhere it links to it. */
   home?: boolean;
+  /** Where the language button goes. Defaults to this page in the other language. */
+  langHref?: string;
 }
-const { home = false } = Astro.props;
-const base = home ? '' : '/';
+const { lang, home = false, langHref } = Astro.props;
+const t = ui[lang];
+const homePath = localePath(lang, '/');
+const base = home ? '' : homePath;
 const rooms = [
-  { href: `${base}#next`, label: 'Next' },
-  { href: `${base}#upcoming`, label: 'Upcoming' },
-  { href: `${base}#archive`, label: 'Archive' },
-  { href: `${base}#house`, label: 'The house' },
+  { href: `${base}#next`, label: t.nav.next },
+  { href: `${base}#upcoming`, label: t.nav.upcoming },
+  { href: `${base}#archive`, label: t.nav.archive },
+  { href: `${base}#house`, label: t.nav.house },
 ];
+const other = t.lang.other;
 ---
 
 <header class="topbar" data-topbar>
-  <a class="wordmark" href={home ? '#next' : '/'} aria-label="Francio House, home">
+  <a class="wordmark" href={home ? '#next' : homePath} aria-label={t.nav.home}>
     <svg class="wordmark__house" viewBox="0 0 40 40" aria-hidden="true">
       <path d="M5 18 20 6l15 12" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"></path>
       <path d="M9 16v19h22V16" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"></path>
@@ -24,7 +31,7 @@ const rooms = [
     <span>francio<b>house</b></span>
   </a>
 
-  <nav class="rooms" aria-label="Rooms">
+  <nav class="rooms" aria-label={t.nav.rooms}>
     <ul>
       {
         rooms.map((r) => (
@@ -36,16 +43,20 @@ const rooms = [
     </ul>
   </nav>
 
+  <a class="lang-btn" href={langHref ?? switchPath(Astro.url.pathname, other)} hreflang={other} lang={other} aria-label={t.lang.switchLabel} data-lang-switch>
+    {t.lang.short}
+  </a>
+
   {
     home ? (
       <button class="outside-btn" type="button" data-go-outside>
         <Icon name="door" />
-        <span>Step outside</span>
+        <span>{t.nav.outside}</span>
       </button>
     ) : (
-      <a class="outside-btn" href="/?intro">
+      <a class="outside-btn" href={`${homePath}?intro`}>
         <Icon name="door" />
-        <span>Step outside</span>
+        <span>{t.nav.outside}</span>
       </a>
     )
   }
@@ -161,6 +172,25 @@ const rooms = [
     color: var(--ink);
   }
 
+  .lang-btn {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    flex: none;
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .lang-btn:hover {
+    background: var(--paper);
+    color: var(--ink);
+  }
+
   .outside-btn {
     display: inline-flex;
     align-items: center;
@@ -214,7 +244,7 @@ const rooms = [
       white-space: nowrap;
     }
 
-    .outside-btn {
+    .lang-btn {
       margin-left: auto;
     }
 
