@@ -22,6 +22,8 @@ const photos = [livingRoom, owlMural, projection, crocMural].map((src, i) => ({
   rot: [-4, 3, -2, 5][i],
 }));
 const steps = t.steps;
+// "Play here" only makes sense once there is a way to get in touch
+const hasContact = Boolean(site.contact.email || site.contact.instagram);
 ---
 
 <section id="house" class="room house" aria-labelledby="house-title">
@@ -39,7 +41,7 @@ const steps = t.steps;
     </div>
   </div>
 
-  <div class="wrap house__cols">
+  <div class:list={['wrap house__cols', { 'house__cols--single': !hasContact }]}>
     <div class="house__how">
       <h3 class="house__h">{t.how}</h3>
       <ol class="steps">
@@ -57,20 +59,28 @@ const steps = t.steps;
         }
       </ol>
     </div>
-    <aside class="house__play" data-reveal>
-      <h3 class="house__h">{t.play}</h3>
-      <p>{t.playText}</p>
-      <div class="house__contacts">
-        <a class="btn btn--sun" href={`mailto:${site.contact.email}`}>
-          <Icon name="mail" />
-          {site.contact.email}
-        </a>
-        <a class="btn btn--light" href={site.contact.instagram} target="_blank" rel="noopener">
-          <Icon name="instagram" />
-          {site.contact.instagramHandle}
-        </a>
-      </div>
-    </aside>
+    {
+      hasContact && (
+        <aside class="house__play" data-reveal>
+          <h3 class="house__h">{t.play}</h3>
+          <p>{t.playText}</p>
+          <div class="house__contacts">
+            {site.contact.email && (
+              <a class="btn btn--sun" href={`mailto:${site.contact.email}`}>
+                <Icon name="mail" />
+                {site.contact.email}
+              </a>
+            )}
+            {site.contact.instagram && (
+              <a class="btn btn--light" href={site.contact.instagram} target="_blank" rel="noopener">
+                <Icon name="instagram" />
+                {site.contact.instagramHandle || 'Instagram'}
+              </a>
+            )}
+          </div>
+        </aside>
+      )
+    }
   </div>
 
   <ul class="wrap snaps" aria-label={t.photosLabel}>
@@ -157,6 +167,11 @@ const steps = t.steps;
     grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
     gap: clamp(32px, 5vw, 80px);
     margin-top: clamp(56px, 7vw, 100px);
+  }
+
+  .house__cols--single {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 820px;
   }
 
   .house__h {

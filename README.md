@@ -95,7 +95,7 @@ poster: ./posters/marea-alta.jpg
 posterAlt: Strisce psichedeliche ondulate con la scritta Marea Alta che si scioglie al centro.
 summary: Un quartetto della costa con un debole per i dischi brasiliani e le drum machine rotte.
 entry: Ingresso libero · il cappello gira per la band
-rsvp: https://www.instagram.com/francio.house/
+rsvp: https://docs.google.com/forms/d/e/.../viewform
 links:
   spotify: https://open.spotify.com/artist/...
   instagram: https://www.instagram.com/...
@@ -150,7 +150,7 @@ Interface texts (menus, buttons, "the house" section, the captions on the street
 | `color` | | Accent colour like `"#ff3d7f"`. If left out, it's picked from the poster automatically. |
 | `summary` | yes | One or two sentences. Used on cards and in link previews (WhatsApp, Instagram…). |
 | `entry` | | Default: "Ingresso libero · le offerte vanno agli artisti" / "Free entry · donations go to the artists". |
-| `rsvp` | | A link (`https://…` or `mailto:…`) shows an RSVP button. Plain text is shown as-is. |
+| `rsvp` | | A link (e.g. the Google Form for that night) shows a **Prenota / RSVP** button. Plain text ("Su prenotazione") is shown as-is. |
 | `links` | | Any of `spotify`, `instagram`, `website`, `bandcamp`, `soundcloud`, `youtube`, `applemusic`, `tickets`. Other names work too and are shown as written. |
 | `recordings` | | For past events: a list of `label` (+ optional `labelEn`) + `url`. Shows a "listen" badge in the archive. |
 | `photos` | | For past events: a list of image paths, e.g. `./photos/marea-alta-1.jpg`. |
@@ -207,7 +207,8 @@ the live site: the previous version simply stays online.
 
 `src/site.config.ts` holds the things that aren't events:
 
-- contact email and Instagram (**currently placeholders: replace them**),
+- contact email and Instagram: empty for now, so they're hidden everywhere; fill them in and they appear
+  (footer, "Play here" box, empty-calendar message),
 - time zone and default event length.
 
 All interface texts, in both languages, are in `src/i18n/ui.ts`: the "where" note shown on every
@@ -314,4 +315,4 @@ Performance:
 
 The events are the real nights at the house (posters and details from the original flyers).
 The photos in "the house" section are real photos of Francio House.
-The contact email and Instagram in `src/site.config.ts` are still placeholders: replace them.
+The contact email and Instagram in `src/site.config.ts` are empty until they exist; once filled in they show up automatically.

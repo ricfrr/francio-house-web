@@ -18,7 +18,7 @@ posterAlt: Descrivi il manifesto in una frase, per chi non può vederlo.
 
 summary: Una o due frasi. Compaiono sulle card e quando il link viene condiviso.
 # entry: Ingresso libero · le offerte vanno agli artisti   # optional, this is the default
-rsvp: https://www.instagram.com/francio.house/   # a link, or a sentence like "Scrivici su Instagram"
+rsvp: https://docs.google.com/forms/...   # the booking form link, or a sentence like "Su prenotazione"
 
 links:                              # any you have, delete the rest
   spotify: https://open.spotify.com/artist/...

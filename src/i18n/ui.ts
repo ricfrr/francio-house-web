@@ -66,7 +66,7 @@ const it = {
     emptyTag: 'shhh…',
     emptyTitle: 'La casa riposa.',
     emptyText:
-      "Nessun concerto in calendario per ora. Le nuove date escono prima su Instagram — intanto fai un giro nell'archivio.",
+      "Nessun concerto in calendario per ora. Nuove date in arrivo — intanto fai un giro nell'archivio.",
     follow: 'Segui',
     archive: "L'archivio",
   },
@@ -113,7 +113,7 @@ const it = {
       'Francio House è una casa, non un locale. Dalla strada sembra uguale a tutte le altre del quartiere: muri bianchi, una scala, una porta. Dentro, i muri sono pieni di pappagalli, gufi e coccodrilli — e qualche volta al mese il salotto diventa un palco per quaranta persone.',
     how: 'Come funziona una serata',
     steps: [
-      ['Prenota', "Si entra solo su prenotazione: scrivici su Instagram o per email. L'indirizzo esatto arriva prima della serata."],
+      ['Prenota', "Si entra solo su prenotazione: trovi il modulo per prenotare nella pagina di ogni serata. L'indirizzo esatto arriva prima della serata."],
       ['Arriva', 'Di solito si comincia verso le 19, a Casine di Ostra. Sali la scala sul lato della casa.'],
       ['Ingresso', "Di solito 10 €, con snack e drink compresi. Il prezzo di ogni serata è sul suo manifesto."],
       ['Ascolta', "Durante i concerti si sta vicini e in silenzio: è un salotto, non un club."],
@@ -191,7 +191,7 @@ const en: Dict = {
     emptyTag: 'shhh…',
     emptyTitle: 'The house is resting.',
     emptyText:
-      'No concerts on the calendar right now. New dates usually appear on Instagram first — or have a look around the archive.',
+      'No concerts on the calendar right now. New dates are coming — meanwhile, have a look around the archive.',
     follow: 'Follow',
     archive: 'The archive',
   },
@@ -238,7 +238,7 @@ const en: Dict = {
       'Francio House is a home, not a venue. From the street it looks like every other house on the block: white walls, a staircase, a door. Inside, the walls are covered in parrots, owls and crocodiles — and a few times a month the living room becomes a stage for forty people.',
     how: 'How a night works',
     steps: [
-      ['Book', 'Entry is by booking only: message us on Instagram or by email. The exact address arrives before the night.'],
+      ['Book', 'Entry is by booking only: each night’s page has its booking form. The exact address arrives before the night.'],
       ['Arrive', 'Things usually start around 7 pm, in Casine di Ostra. Walk up the stairs at the side of the house.'],
       ['Entry', 'Usually €10, snacks and drinks included. Each night’s price is on its poster.'],
       ['Listen', 'During the concerts we sit close and stay quiet: it’s a living room, not a club.'],

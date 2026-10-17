@@ -28,10 +28,24 @@ const year = new Date().getFullYear();
           <li><a href={`${base}#house`}>{t.nav.house}</a></li>
         </ul>
       </nav>
-      <div class="floor__contacts">
-        <a href={site.contact.instagram} target="_blank" rel="noopener"><Icon name="instagram" />{site.contact.instagramHandle}</a>
-        <a href={`mailto:${site.contact.email}`}><Icon name="mail" />{site.contact.email}</a>
-      </div>
+      {
+        (site.contact.instagram || site.contact.email) && (
+          <div class="floor__contacts">
+            {site.contact.instagram && (
+              <a href={site.contact.instagram} target="_blank" rel="noopener">
+                <Icon name="instagram" />
+                {site.contact.instagramHandle || 'Instagram'}
+              </a>
+            )}
+            {site.contact.email && (
+              <a href={`mailto:${site.contact.email}`}>
+                <Icon name="mail" />
+                {site.contact.email}
+              </a>
+            )}
+          </div>
+        )
+      }
       {
         home ? (
           <button class="btn btn--light" type="button" data-go-outside>

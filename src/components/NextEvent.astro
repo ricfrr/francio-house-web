@@ -136,7 +136,13 @@ const isUrl = (s?: string) => !!s && /^(https?:|mailto:)/.test(s);
       <h3 class="hero__artist">{t.next.emptyTitle}</h3>
       <p class="hero__summary">{t.next.emptyText}</p>
       <div class="hero__actions">
-        <a class="btn btn--sun" href={site.contact.instagram} target="_blank" rel="noopener">{t.next.follow} {site.contact.instagramHandle}</a>
+        {
+          site.contact.instagram && (
+            <a class="btn btn--sun" href={site.contact.instagram} target="_blank" rel="noopener">
+              {t.next.follow} {site.contact.instagramHandle || 'Instagram'}
+            </a>
+          )
+        }
         <a class="btn btn--light" href="#archive">{t.next.archive}</a>
       </div>
     </div>
