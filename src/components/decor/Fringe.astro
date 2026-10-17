@@ -1,0 +1,54 @@
+---
+import { fringe } from '../../lib/decor';
+// The tinsel curtain from the party photos.
+const colors = ['#ffd23f', '#ff8a1c', '#f7f3ea', '#ff7eb6', '#e63a2e', '#ffd23f', '#9b5cff'];
+const { groups } = fringe(11, colors);
+---
+
+<svg class="fringe" viewBox="0 0 1200 200" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+  <rect x="0" y="0" width="1200" height="6" fill="#2a1d14"></rect>
+  {
+    groups.map((strips, i) => (
+      <g class="fringe__panel" style={`--i:${i}`}>
+        {strips.map((s) => (
+          <rect x={s.x} y="4" width="2.6" height={s.len} fill={s.color} />
+        ))}
+      </g>
+    ))
+  }
+</svg>
+
+<style>
+  .fringe {
+    display: block;
+    width: 100%;
+    height: clamp(90px, 16vh, 180px);
+    overflow: visible;
+  }
+
+  .fringe__panel {
+    transform-box: fill-box;
+    transform-origin: 50% 0;
+    animation: sway 5.5s ease-in-out infinite alternate;
+    animation-delay: calc(var(--i) * -0.9s);
+  }
+
+  .fringe rect {
+    filter: drop-shadow(0 0 0.6px rgb(0 0 0 / 0.25));
+  }
+
+  @keyframes sway {
+    0% {
+      transform: skewX(-3deg);
+    }
+    100% {
+      transform: skewX(3.5deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fringe__panel {
+      animation: none;
+    }
+  }
+</style>

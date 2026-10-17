@@ -1,0 +1,45 @@
+---
+// The big parrot painted on the living-room wall.
+interface Props {
+  class?: string;
+  /** Scroll parallax factor (0 = none). */
+  parallax?: number;
+}
+const { class: className = '', parallax } = Astro.props;
+---
+
+<svg class:list={['macaw', className]} data-parallax={parallax} viewBox="0 0 400 520" aria-hidden="true" focusable="false">
+  <g filter="url(#paint)">
+    <path
+      d="M118 520C105 440 100 360 125 290C140 230 150 170 190 125C230 85 300 95 335 140C350 160 352 180 345 200L300 230C270 270 245 320 240 380C236 430 240 480 250 520Z"
+      fill="#e5262b"></path>
+    <path d="M108 520C108 470 118 430 135 400C170 410 205 410 238 400C236 440 238 480 246 520Z" fill="#ffcf2a"></path>
+    <path d="M112 520C113 495 118 475 126 458C160 466 200 466 238 460C238 482 240 500 244 520Z" fill="#2c6fe0"></path>
+    <g fill="none" stroke="#b3141c" stroke-width="4" stroke-linecap="round">
+      <path d="M150 262q20-10 40 0"></path>
+      <path d="M160 302q18-8 36 0"></path>
+      <path d="M140 342q22-10 44 0"></path>
+      <path d="M182 200q16-8 30 0"></path>
+      <path d="M200 236q14-8 28 0"></path>
+      <path d="M156 380q20-8 40 0"></path>
+    </g>
+    <g fill="none" stroke="#2fc24a" stroke-width="5" stroke-linecap="round">
+      <path d="M140 452q30 8 60 2"></path>
+      <path d="M150 440q26 6 52 0"></path>
+    </g>
+    <path d="M215 140C245 118 300 128 318 165C325 190 315 215 290 228C260 240 228 228 214 205C200 185 200 158 215 140Z" fill="#fbf3e2"></path>
+    <g fill="none" stroke="#c81d25" stroke-width="2.6" stroke-linecap="round">
+      <path d="M228 160q10-4 20 0"></path>
+      <path d="M226 180q12-4 24 0"></path>
+      <path d="M232 200q12-4 22 0"></path>
+      <path d="M252 216q10-4 20 0"></path>
+      <path d="M288 206q8-4 16 0"></path>
+    </g>
+    <path d="M305 150C345 125 398 150 398 215C398 262 380 300 352 318C360 288 360 262 348 240C336 222 318 214 300 210C296 190 296 168 305 150Z" fill="#efe3c8"></path>
+    <path d="M352 318C360 288 360 262 348 240C362 260 370 285 360 312Z" fill="#c9b994"></path>
+    <path d="M300 210C322 214 342 230 346 262C340 278 322 280 306 264C296 250 294 228 300 210Z" fill="#1d1a1a"></path>
+    <circle cx="268" cy="170" r="15" fill="#ffe066" stroke="#1b1b1b" stroke-width="3"></circle>
+    <circle cx="268" cy="170" r="7" fill="#111"></circle>
+    <circle cx="264" cy="166" r="3" fill="#fff"></circle>
+  </g>
+</svg>

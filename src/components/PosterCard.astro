@@ -1,0 +1,164 @@
+---
+import { Image } from 'astro:assets';
+import type { HouseEvent } from '../lib/events';
+import { seeded } from '../lib/events';
+import { formatDayMonth, formatWeekday } from '../lib/time';
+
+interface Props {
+  event: HouseEvent;
+  index: number;
+}
+const { event: e, index } = Astro.props;
+const rot = seeded(e.slug, -2.6, 2.6).toFixed(2);
+const tapeRot = seeded(e.slug + 't', -9, 9).toFixed(1);
+---
+
+<li class="card" data-ends={e.end.toISOString()} style={`--accent:${e.accent};--accent-ink:${e.ink};--rot:${rot}deg;--i:${index}`} data-reveal>
+  <a class="card__link" href={e.url}>
+    <figure class="card__poster" data-tilt>
+      <span class="tape" style={`left:50%;top:-12px;transform:translateX(-50%) rotate(${tapeRot}deg)`}></span>
+      <Image
+        src={e.poster}
+        alt={e.posterAlt ?? `Poster for ${e.artist}`}
+        widths={[320, 480, 720]}
+        sizes="(min-width: 1100px) 26vw, (min-width: 700px) 40vw, 72vw"
+        loading="lazy"
+      />
+      <span class="card__shine" aria-hidden="true"></span>
+    </figure>
+    <div class="card__label">
+      <p class="card__when mono">
+        <time datetime={e.start.toISOString()}>{formatWeekday(e.start)} {formatDayMonth(e.start)}</time>
+        <span>· {e.time}</span>
+      </p>
+      <h3 class="card__artist">{e.artist}</h3>
+      {e.title !== e.artist && <p class="card__title">{e.title}</p>}
+      {e.genre && <p class="card__genre mono">{e.genre}</p>}
+      <span class="card__more mono" aria-hidden="true">details →</span>
+    </div>
+  </a>
+</li>
+
+<style>
+  .card {
+    position: relative;
+    list-style: none;
+    --reveal-delay: calc(var(--i) * 0.07s);
+  }
+
+  .card__link {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    height: 100%;
+    text-decoration: none;
+    color: var(--ink);
+  }
+
+  .card__poster {
+    position: relative;
+    margin: 0;
+    transform: perspective(900px) rotateX(var(--tx, 0deg)) rotateY(var(--ty, 0deg)) rotate(var(--rot));
+    transform-style: preserve-3d;
+    transition:
+      transform 0.5s var(--ease-out),
+      filter 0.4s;
+    filter: drop-shadow(0 18px 22px rgb(70 0 30 / 0.35)) drop-shadow(0 2px 3px rgb(0 0 0 / 0.25));
+  }
+
+  .card__poster:global(.is-tilting) {
+    transition-duration: 0.12s, 0.4s;
+  }
+
+  .card__poster img {
+    width: 100%;
+    background: var(--paper);
+  }
+
+  .card__shine {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle at var(--sx, 30%) var(--sy, 20%), rgb(255 255 255 / 0.35), transparent 50%);
+    mix-blend-mode: soft-light;
+    opacity: var(--shine, 0);
+    transition: opacity 0.3s;
+  }
+
+  .card__link:hover .card__poster,
+  .card__link:focus-visible .card__poster {
+    filter: drop-shadow(0 28px 36px color-mix(in srgb, var(--accent) 70%, transparent)) drop-shadow(0 2px 3px rgb(0 0 0 / 0.25));
+  }
+
+  /* gallery wall label */
+  .card__label {
+    position: relative;
+    margin-top: auto;
+    padding: 14px 16px 16px;
+    background: var(--paper);
+    border-left: 8px solid var(--accent);
+    box-shadow: 0 6px 16px rgb(0 0 0 / 0.12);
+    transition: transform 0.35s var(--ease-spring);
+  }
+
+  .card__link:hover .card__label {
+    transform: translateY(-4px) rotate(-0.6deg);
+  }
+
+  .card__when {
+    display: flex;
+    gap: 6px;
+    margin: 0 0 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .card__artist {
+    font-size: clamp(1.7rem, 2.6vw, 2.4rem);
+    font-variation-settings: 'wdth' 78;
+    line-height: 0.92;
+    margin-bottom: 4px;
+  }
+
+  .card__title {
+    margin: 0 0 4px;
+    font-style: italic;
+    font-weight: 300;
+  }
+
+  .card__genre {
+    margin: 0;
+    font-size: 0.74rem;
+    opacity: 0.7;
+  }
+
+  .card__more {
+    position: absolute;
+    right: 14px;
+    bottom: 12px;
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    opacity: 0;
+    transform: translateX(-6px);
+    transition:
+      opacity 0.25s,
+      transform 0.3s var(--ease-out);
+  }
+
+  .card__link:hover .card__more,
+  .card__link:focus-visible .card__more {
+    opacity: 1;
+    transform: none;
+  }
+
+  @media (hover: none) {
+    .card__more {
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>

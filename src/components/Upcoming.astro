@@ -1,0 +1,159 @@
+---
+import type { HouseEvent } from '../lib/events';
+import PosterCard from './PosterCard.astro';
+import Drips from './decor/Drips.astro';
+import Toucan from './decor/Toucan.astro';
+import Leaf from './decor/Leaf.astro';
+
+interface Props {
+  events: HouseEvent[];
+}
+const { events } = Astro.props;
+---
+
+<section id="upcoming" class="room upcoming" aria-labelledby="upcoming-title">
+  <Drips bg="var(--drip-bg)" seed={4} />
+  <div class="wrap upcoming__head">
+    <div>
+      <p class="room-kicker">Room 2 · the pink wall</p>
+      <h2 id="upcoming-title" class="room-title">coming<br />up</h2>
+    </div>
+    <p class="upcoming__intro">
+      Posters go up on this wall as soon as a date is confirmed. Every night is small, so if something catches your eye,
+      RSVP early.
+    </p>
+    <Toucan class="upcoming__toucan" parallax={0.18} />
+  </div>
+
+  {
+    events.length > 0 ? (
+      <ol class="wall" data-wall>
+        {events.map((e, i) => (
+          <PosterCard event={e} index={i} />
+        ))}
+      </ol>
+    ) : (
+      <p class="wrap upcoming__empty hand">Nothing pinned yet — new dates soon.</p>
+    )
+  }
+  <p class="wrap wall__hint mono" aria-hidden="true">← swipe the wall →</p>
+
+  <Leaf kind="palm" class="upcoming__leaf" />
+</section>
+
+<style>
+  .upcoming {
+    --room-bg: var(--pink);
+    --drip-bg: linear-gradient(90deg, var(--magenta) 52%, var(--mint) 52%);
+    padding: clamp(110px, 14vw, 180px) 0 clamp(150px, 16vw, 220px);
+    overflow: clip;
+  }
+
+  .upcoming__head {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 36ch);
+    align-items: end;
+    justify-content: space-between;
+    gap: 24px 48px;
+    margin-bottom: clamp(48px, 7vw, 96px);
+  }
+
+  .upcoming__intro {
+    margin: 0;
+    font-size: 1.05rem;
+  }
+
+  .upcoming :global(.upcoming__toucan) {
+    position: absolute;
+    width: clamp(130px, 15vw, 230px);
+    left: clamp(220px, 34vw, 520px);
+    top: -30px;
+    transform: rotate(-4deg);
+  }
+
+  .wall {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+    gap: clamp(48px, 5vw, 80px) clamp(28px, 4vw, 64px);
+    align-items: start;
+    width: min(100% - var(--gutter) * 2, var(--max));
+    margin: 0 auto;
+    padding: 0;
+  }
+
+  /* a little stagger, like posters pinned by hand */
+  .wall > :global(li:nth-child(3n + 2)) {
+    margin-top: clamp(0px, 4vw, 56px);
+  }
+
+  .wall > :global(li:nth-child(3n)) {
+    margin-top: clamp(0px, 1.5vw, 20px);
+  }
+
+  .wall__hint {
+    display: none;
+  }
+
+  .upcoming__empty {
+    font-size: 2rem;
+  }
+
+  .upcoming :global(.upcoming__leaf) {
+    position: absolute;
+    width: clamp(200px, 22vw, 340px);
+    left: -60px;
+    bottom: 40px;
+    color: #1d7a3a;
+    transform: rotate(32deg);
+    z-index: -1;
+  }
+
+  @media (max-width: 959px) {
+    .upcoming {
+      --drip-bg: var(--mint);
+    }
+  }
+
+  /* phones: the wall becomes a horizontal row you can swipe */
+  @media (max-width: 699px) {
+    .upcoming__head {
+      grid-template-columns: 1fr;
+    }
+
+    .upcoming :global(.upcoming__toucan) {
+      left: auto;
+      right: 0;
+      top: -20px;
+      width: 120px;
+    }
+
+    .wall {
+      display: flex;
+      gap: 28px;
+      width: 100%;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding: 24px var(--gutter) 28px;
+      scroll-padding-inline: var(--gutter);
+      scrollbar-width: none;
+    }
+
+    .wall::-webkit-scrollbar {
+      display: none;
+    }
+
+    .wall > :global(li) {
+      flex: 0 0 74vw;
+      scroll-snap-align: start;
+      margin-top: 0 !important;
+    }
+
+    .wall__hint {
+      display: block;
+      text-align: center;
+      font-size: 0.75rem;
+      opacity: 0.7;
+    }
+  }
+</style>

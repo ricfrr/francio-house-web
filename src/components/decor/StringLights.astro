@@ -1,0 +1,77 @@
+---
+interface Props {
+  /** warm bulbs (living room) or blue/green fairy lights (concert room) */
+  tone?: 'warm' | 'fairy';
+  class?: string;
+}
+const { tone = 'warm', class: className = '' } = Astro.props;
+// two sagging cords across the room
+const cords = [
+  { y0: 10, y1: 30, sag: 70, n: 13 },
+  { y0: 40, y1: 6, sag: 54, n: 11 },
+];
+const fairy = ['#3b8bff', '#36e08f', '#3b8bff', '#7af7ff'];
+const bulbs = cords.flatMap((c, ci) =>
+  Array.from({ length: c.n }, (_, i) => {
+    const t = (i + 0.5) / c.n;
+    const x = t * 1200;
+    const y = (1 - t) * c.y0 + t * c.y1 + 4 * c.sag * t * (1 - t);
+    return { x, y, ci, i, color: tone === 'warm' ? '#ffe2a1' : fairy[(i + ci) % fairy.length] };
+  }),
+);
+---
+
+<svg class:list={['lights', `lights--${tone}`, className]} viewBox="0 0 1200 140" preserveAspectRatio="xMidYMin slice" aria-hidden="true" focusable="false">
+  <defs>
+    <radialGradient id={`glow-${tone}`}>
+      <stop offset="0" stop-color="currentColor" stop-opacity="0.85"></stop>
+      <stop offset="1" stop-color="currentColor" stop-opacity="0"></stop>
+    </radialGradient>
+  </defs>
+  {
+    cords.map((c) => (
+      <path d={`M0 ${c.y0} Q600 ${(c.y0 + c.y1) / 2 + c.sag * 2} 1200 ${c.y1}`} fill="none" stroke="#1d1712" stroke-width="2" />
+    ))
+  }
+  {
+    bulbs.map((b) => (
+      <g class="bulb" style={`color:${b.color};--d:${((b.i * 7 + b.ci * 3) % 11) * 0.37}s`}>
+        <circle cx={b.x} cy={b.y + 14} r={tone === 'warm' ? 26 : 16} fill={`url(#glow-${tone})`} class="bulb__glow" />
+        <rect x={b.x - 3} y={b.y} width="6" height="7" fill="#1d1712" />
+        <circle cx={b.x} cy={b.y + 13} r={tone === 'warm' ? 6.5 : 4} fill="currentColor" />
+      </g>
+    ))
+  }
+</svg>
+
+<style>
+  .lights {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: clamp(90px, 12vw, 150px);
+    pointer-events: none;
+  }
+
+  .bulb__glow {
+    animation: flicker 3.6s ease-in-out infinite;
+    animation-delay: var(--d);
+    mix-blend-mode: screen;
+  }
+
+  @keyframes flicker {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    45% {
+      opacity: 0.65;
+    }
+    50% {
+      opacity: 0.95;
+    }
+    52% {
+      opacity: 0.5;
+    }
+  }
+</style>

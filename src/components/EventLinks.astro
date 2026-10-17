@@ -1,0 +1,38 @@
+---
+import Icon from './Icon.astro';
+import { linkLabels } from '../lib/events';
+
+interface Props {
+  links: Record<string, string>;
+  artist: string;
+  class?: string;
+}
+const { links, artist, class: className = '' } = Astro.props;
+const entries = Object.entries(links);
+---
+
+{
+  entries.length > 0 && (
+    <ul class:list={['links', className]} aria-label={`${artist} online`}>
+      {entries.map(([key, url]) => (
+        <li>
+          <a class="chip" href={url} target="_blank" rel="noopener">
+            <Icon name={key} />
+            {linkLabels[key] ?? key}
+          </a>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+<style>
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+</style>

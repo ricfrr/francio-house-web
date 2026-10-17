@@ -1,0 +1,281 @@
+---
+import { Image } from 'astro:assets';
+import { site } from '../site.config';
+import Icon from './Icon.astro';
+import OwlFace from './decor/OwlFace.astro';
+import Leaf from './decor/Leaf.astro';
+import livingRoom from '../assets/house/living-room.jpg';
+import owlMural from '../assets/house/owl-mural.jpg';
+import crocMural from '../assets/house/croc-mural.jpg';
+import projection from '../assets/house/projection-night.jpg';
+
+const photos = [
+  { src: livingRoom, caption: 'the living room', alt: 'Living room with a hot pink wall, a mint green wall, parrot paintings, an aquarium and a brass arc lamp.', rot: -4 },
+  { src: owlMural, caption: 'the owls, in the garden', alt: 'A garden shed painted with two huge owls, stone pines and a little bridge.', rot: 3 },
+  { src: projection, caption: 'projection night', alt: 'A performer in a pink wig in front of a projection, under a colourful fringe curtain.', rot: -2 },
+  { src: crocMural, caption: 'the crocodile', alt: 'A pink wall painted with a green crocodile, a toucan and a banana.', rot: 5 },
+];
+
+const steps = [
+  ['RSVP', 'Send us a message on Instagram or by email. The address arrives the day before.'],
+  ['Arrive', 'Doors around 20:30, music at 21:00. Walk up the stairs at the side of the house.'],
+  ['Give', 'Most nights are free. There is a hat for the artists — every euro goes to them.'],
+  ['Share', 'Bring something to drink or nibble. Take your empties home with you.'],
+  ['Shh', 'We stop around midnight. Go down the stairs quietly — the neighbours are friends.'],
+];
+---
+
+<section id="house" class="room house" aria-labelledby="house-title">
+  <div class="house__drip" aria-hidden="true"></div>
+  <div class="wrap house__grid">
+    <div class="house__text">
+      <p class="room-kicker">Room 4 · the owl wall</p>
+      <h2 id="house-title" class="room-title">the<br />house</h2>
+      <p class="house__lede">
+        Francio House is a home, not a venue. From the street it looks like every other house on the block: white walls, a
+        staircase, a door. Inside, the walls are covered in parrots, owls and crocodiles — and a few times a month the
+        living room becomes a stage for forty people sitting on the floor.
+      </p>
+    </div>
+    <div class="house__owl" aria-hidden="true" data-parallax="0.08">
+      <OwlFace />
+      <Leaf kind="monstera" class="house__leaf house__leaf--a" />
+      <Leaf kind="heart" class="house__leaf house__leaf--b" />
+    </div>
+  </div>
+
+  <div class="wrap house__cols">
+    <div class="house__how">
+      <h3 class="house__h">How a night works</h3>
+      <ol class="steps">
+        {
+          steps.map(([title, text], i) => (
+            <li style={`--i:${i}`} data-reveal>
+              <span class="steps__n hand" aria-hidden="true">
+                {i + 1}
+              </span>
+              <span>
+                <b>{title}.</b> {text}
+              </span>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+    <aside class="house__play" data-reveal>
+      <h3 class="house__h">Play here</h3>
+      <p>
+        We host touring and local artists of any genre that fits in a living room — acoustic, electronic, loud, very quiet.
+        Send us a link and a few lines about you.
+      </p>
+      <div class="house__contacts">
+        <a class="btn btn--sun" href={`mailto:${site.contact.email}`}>
+          <Icon name="mail" />
+          {site.contact.email}
+        </a>
+        <a class="btn btn--light" href={site.contact.instagram} target="_blank" rel="noopener">
+          <Icon name="instagram" />
+          {site.contact.instagramHandle}
+        </a>
+      </div>
+    </aside>
+  </div>
+
+  <ul class="wrap snaps" aria-label="Photos of the house">
+    {
+      photos.map((p, i) => (
+        <li style={`--rot:${p.rot}deg;--reveal-delay:${i * 0.08}s`} data-reveal>
+          <figure>
+            <Image src={p.src} alt={p.alt} widths={[280, 420, 640]} sizes="(min-width: 900px) 22vw, 44vw" loading="lazy" />
+            <figcaption class="hand">{p.caption}</figcaption>
+          </figure>
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<style>
+  .house {
+    --room-bg: var(--sky);
+    padding: clamp(110px, 12vw, 170px) 0 clamp(90px, 10vw, 140px);
+    overflow: clip;
+    background-image:
+      radial-gradient(40% 30% at 85% 15%, rgb(255 255 255 / 0.35), transparent 70%),
+      var(--grain);
+    background-size:
+      auto,
+      220px;
+  }
+
+  /* soft painted edge where the blue room meets the sky wall */
+  .house__drip {
+    position: absolute;
+    inset: -1px 0 auto;
+    height: 70px;
+    background: linear-gradient(var(--uv), transparent);
+  }
+
+  .house__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 32px;
+  }
+
+  .house__lede {
+    margin-top: 28px;
+    font-size: clamp(1.15rem, 1.7vw, 1.45rem);
+    max-width: 38ch;
+  }
+
+  .house__owl {
+    position: relative;
+  }
+
+  .house__owl :global(.owl) {
+    width: min(100%, 520px);
+    margin-inline: auto;
+    filter: drop-shadow(0 18px 0 rgb(0 0 0 / 0.08));
+  }
+
+  .house :global(.house__leaf) {
+    position: absolute;
+    pointer-events: none;
+  }
+
+  .house :global(.house__leaf--a) {
+    width: 38%;
+    left: -6%;
+    bottom: -14%;
+    color: #1d7a3a;
+    transform: rotate(-28deg);
+  }
+
+  .house :global(.house__leaf--b) {
+    width: 18%;
+    right: 2%;
+    bottom: -4%;
+    color: #36a35a;
+    transform: rotate(24deg);
+  }
+
+  .house__cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: clamp(32px, 5vw, 80px);
+    margin-top: clamp(56px, 7vw, 100px);
+  }
+
+  .house__h {
+    font-size: clamp(1.6rem, 2.6vw, 2.3rem);
+    font-variation-settings: 'wdth' 80;
+    margin-bottom: 20px;
+  }
+
+  .steps {
+    display: grid;
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .steps li {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    align-items: start;
+    gap: 14px;
+    --reveal-delay: calc(var(--i) * 0.06s);
+  }
+
+  .steps__n {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--sun);
+    font-size: 1.5rem;
+    line-height: 1;
+    transform: rotate(-8deg);
+  }
+
+  .steps li:nth-child(even) .steps__n {
+    background: var(--paper);
+    color: var(--magenta);
+    transform: rotate(6deg);
+  }
+
+  .house__play {
+    align-self: start;
+    padding: 28px;
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    box-shadow: 8px 8px 0 var(--ink);
+    transform: rotate(1.2deg);
+  }
+
+  .house__contacts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .house__contacts .btn {
+    text-transform: none;
+    font-size: 0.85rem;
+  }
+
+  .snaps {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(16px, 3vw, 40px);
+    margin-top: clamp(64px, 8vw, 120px);
+    padding: 0;
+    list-style: none;
+  }
+
+  .snaps figure {
+    margin: 0;
+    padding: 10px 10px 0;
+    background: #fbfaf5;
+    box-shadow: 0 16px 30px rgb(10 40 80 / 0.3);
+    transform: rotate(var(--rot));
+    transition: transform 0.4s var(--ease-spring);
+  }
+
+  .snaps figure:hover {
+    transform: rotate(0) scale(1.04);
+  }
+
+  .snaps img {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+  }
+
+  .snaps figcaption {
+    padding: 10px 4px 14px;
+    text-align: center;
+  }
+
+  @media (max-width: 860px) {
+    .house__grid,
+    .house__cols {
+      grid-template-columns: 1fr;
+    }
+
+    .house__owl {
+      order: -1;
+      max-width: 360px;
+      margin-inline: auto;
+    }
+
+    .snaps {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

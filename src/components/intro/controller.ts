@@ -1,0 +1,187 @@
+import type { Street, StreetFrame } from './street';
+
+const STORAGE_KEY = 'fh:inside';
+/** Past this point the camera is through the door and the screen shows only the site. */
+const FINISH_AT = 0.985;
+
+const html = document.documentElement;
+const smooth = (a: number, b: number, x: number) => {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
+const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+export function initOutside() {
+  const outside = document.querySelector<HTMLElement>('[data-outside]');
+  const spacer = document.querySelector<HTMLElement>('[data-spacer]');
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-street-canvas]');
+  const house = document.getElementById('interior');
+  if (!outside || !spacer || !canvas || !house) return;
+
+  (window as unknown as { __fhStreet: boolean }).__fhStreet = true; // see the safety net in Base.astro
+  const ui = outside.querySelector<HTMLElement>('.outside__ui')!;
+  const bell = outside.querySelector<HTMLButtonElement>('[data-enter]')!;
+  const captions = [...outside.querySelectorAll<HTMLElement>('[data-from]')];
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+
+  let street: Street | null = null;
+  let loading: Promise<Street | null> | null = null;
+  let autoplay = 0;
+  let progress = 0;
+
+  const isOutside = () => html.dataset.mode === 'outside';
+  const still = () => reducedMotion.matches || html.dataset.motion === 'reduced';
+
+  function scrollProgress() {
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    return max > 0 ? Math.min(1, window.scrollY / max) : 0;
+  }
+
+  function paint(p: number) {
+    progress = p;
+    for (const c of captions) {
+      const on = p >= Number(c.dataset.from) && p < Number(c.dataset.to);
+      c.classList.toggle('is-on', on);
+    }
+    ui.style.setProperty('--ui', String(1 - smooth(0.74, 0.84, p)));
+    // the room behind the door grows as we get closer
+    html.style.setProperty('--approach', (0.86 + 0.14 * smooth(0.72, 0.985, p)).toFixed(4));
+    if (p >= FINISH_AT && isOutside()) finish();
+  }
+
+  function onFrame(f: StreetFrame) {
+    paint(f.progress);
+  }
+
+  async function ensureStreet(): Promise<Street | null> {
+    if (street) return street;
+    if (still()) return null;
+    loading ??= import('./street')
+      .then(({ createStreet }) => {
+        const s = createStreet(canvas!);
+        s.onFrame(onFrame);
+        s.setTarget(scrollProgress(), true);
+        s.start();
+        // show the canvas once it has drawn a frame
+        requestAnimationFrame(() => requestAnimationFrame(() => outside!.classList.add('is-3d')));
+        street = s;
+        return s;
+      })
+      .catch((err) => {
+        console.warn('Street scene unavailable, using the flat facade.', err);
+        html.dataset.motion = 'reduced';
+        return null;
+      })
+      .finally(() => {
+        loading = null;
+      });
+    return loading;
+  }
+
+  function onScroll() {
+    if (!isOutside() || autoplay) return;
+    const p = scrollProgress();
+    if (street) {
+      street.setTarget(p);
+    } else if (still()) {
+      // no camera move: the street simply fades away
+      outside!.style.opacity = String(1 - smooth(0.1, 0.95, p));
+      captions[0]?.classList.add('is-on');
+      if (p >= 0.97) finish();
+    }
+  }
+
+  function leave() {
+    if (!isOutside()) return;
+    outside!.classList.add('is-leaving');
+    window.setTimeout(finish, still() ? 50 : 480);
+  }
+
+  function enter() {
+    if (!isOutside()) return;
+    if (!street) return leave();
+    if (autoplay) return;
+    html.classList.add('is-autoplay');
+    const from = progress;
+    const duration = Math.max(1800, (1 - from) * 6400);
+    const t0 = performance.now();
+    const s = street;
+    const step = (now: number) => {
+      const t = Math.min(1, (now - t0) / duration);
+      s.setTarget(from + (1 - from) * easeInOut(t));
+      autoplay = t < 1 ? requestAnimationFrame(step) : -1; // -1: done, waiting for the camera to catch up
+    };
+    autoplay = requestAnimationFrame(step);
+  }
+
+  function finish() {
+    if (!isOutside()) return;
+    if (autoplay > 0) cancelAnimationFrame(autoplay);
+    autoplay = 0;
+    try {
+      localStorage.setItem(STORAGE_KEY, '1');
+    } catch {
+      /* private mode */
+    }
+    html.dataset.mode = 'inside';
+    html.classList.remove('is-autoplay');
+    html.style.removeProperty('--approach');
+    outside!.classList.remove('is-leaving', 'is-3d');
+    outside!.style.removeProperty('opacity');
+    house!.inert = false;
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    const url = new URL(location.href);
+    if (url.searchParams.has('intro')) {
+      url.searchParams.delete('intro');
+      history.replaceState(null, '', url);
+    }
+    street?.dispose();
+    street = null;
+    document.getElementById('next')?.focus({ preventScroll: true });
+    document.dispatchEvent(new CustomEvent('house:inside'));
+  }
+
+  function goOutside() {
+    if (isOutside()) return;
+    html.dataset.mode = 'outside';
+    house!.inert = true;
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    paint(0);
+    ensureStreet().then((s) => {
+      s?.setTarget(0, true);
+      if (!s) captions[0]?.classList.add('is-on');
+    });
+    bell.focus({ preventScroll: true });
+  }
+
+  // ---- wire up ----
+  html.dataset.motion = reducedMotion.matches ? 'reduced' : 'full';
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
+  if (isOutside()) {
+    house.inert = true;
+    window.scrollTo(0, 0);
+    paint(0);
+    ensureStreet().then((s) => {
+      if (!s) captions[0]?.classList.add('is-on');
+    });
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  bell.addEventListener('click', enter);
+  outside.querySelector('[data-skip]')?.addEventListener('click', leave);
+  document.addEventListener('click', (e) => {
+    if ((e.target as Element | null)?.closest('[data-go-outside]')) goOutside();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isOutside()) leave();
+  });
+  window.addEventListener(
+    'pointermove',
+    (e) => {
+      if (!street || e.pointerType !== 'mouse') return;
+      street.setPointer((e.clientX / window.innerWidth) * 2 - 1, (e.clientY / window.innerHeight) * 2 - 1);
+    },
+    { passive: true },
+  );
+}

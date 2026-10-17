@@ -1,0 +1,137 @@
+---
+import { site } from '../site.config';
+import { terrazzo } from '../lib/decor';
+import Icon from './Icon.astro';
+
+interface Props {
+  home?: boolean;
+}
+const { home = false } = Astro.props;
+const floor = terrazzo(9);
+const year = new Date().getFullYear();
+---
+
+<footer class="floor" style={`--terrazzo:${floor}`}>
+  <div class="wrap floor__inner">
+    <p class="floor__mark" aria-hidden="true">francio<span>house</span></p>
+    <p class="floor__line">From the street, it's just a white house.</p>
+    <div class="floor__row">
+      <nav aria-label="Footer">
+        <ul>
+          <li><a href={home ? '#next' : '/#next'}>Next</a></li>
+          <li><a href={home ? '#upcoming' : '/#upcoming'}>Upcoming</a></li>
+          <li><a href={home ? '#archive' : '/#archive'}>Archive</a></li>
+          <li><a href={home ? '#house' : '/#house'}>The house</a></li>
+        </ul>
+      </nav>
+      <div class="floor__contacts">
+        <a href={site.contact.instagram} target="_blank" rel="noopener"><Icon name="instagram" />{site.contact.instagramHandle}</a>
+        <a href={`mailto:${site.contact.email}`}><Icon name="mail" />{site.contact.email}</a>
+      </div>
+      {
+        home ? (
+          <button class="btn btn--light" type="button" data-go-outside>
+            <Icon name="door" /> Step back outside
+          </button>
+        ) : (
+          <a class="btn btn--light" href="/?intro">
+            <Icon name="door" /> Step back outside
+          </a>
+        )
+      }
+    </div>
+    <p class="floor__small mono">© {year} {site.name} · a private home, please be kind to the neighbours</p>
+  </div>
+</footer>
+
+<style>
+  .floor {
+    position: relative;
+    color: var(--ink);
+    background: var(--terrazzo) 0 0 / 360px;
+    padding: clamp(60px, 8vw, 110px) 0 60px;
+    box-shadow: inset 0 18px 30px -12px rgb(0 0 0 / 0.35);
+  }
+
+  .floor__inner {
+    display: grid;
+    gap: 24px;
+  }
+
+  .floor__mark {
+    margin: 0;
+    font-size: clamp(3.6rem, 15vw, 15rem);
+    font-weight: 800;
+    font-variation-settings: 'wdth' 75;
+    letter-spacing: -0.04em;
+    line-height: 0.8;
+    color: var(--ink);
+    mix-blend-mode: multiply;
+  }
+
+  .floor__mark span {
+    font-weight: 300;
+  }
+
+  .floor__line {
+    margin: 0;
+    font-size: clamp(1.2rem, 2vw, 1.6rem);
+    font-style: italic;
+    font-weight: 300;
+  }
+
+  .floor__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px 40px;
+    padding: 20px 24px;
+    background: rgb(251 246 236 / 0.82);
+    border-radius: 10px;
+  }
+
+  .floor__row ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+  }
+
+  .floor__contacts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+
+  .floor__contacts a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .floor__contacts :global(.icon) {
+    width: 18px;
+    height: 18px;
+  }
+
+  .floor__small {
+    margin: 0;
+    font-size: 0.72rem;
+  }
+
+  /* room for the floating nav on phones */
+  @media (max-width: 760px) {
+    .floor {
+      padding-bottom: 120px;
+    }
+  }
+</style>

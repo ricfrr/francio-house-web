@@ -1,0 +1,75 @@
+---
+// The owl from the outside wall. Its pupils follow the pointer (see scripts/inside.ts).
+interface Props {
+  class?: string;
+}
+const { class: className = '' } = Astro.props;
+const eyes = [140, 280];
+const feathers = eyes.flatMap((cx) =>
+  Array.from({ length: 26 }, (_, i) => {
+    const a = (i / 26) * Math.PI * 2;
+    const r0 = 70, r1 = 96 + (i % 3) * 6;
+    return `M${(cx + Math.cos(a) * r0).toFixed(1)} ${(172 + Math.sin(a) * r0).toFixed(1)}L${(cx + Math.cos(a) * r1).toFixed(1)} ${(172 + Math.sin(a) * r1).toFixed(1)}`;
+  }),
+).join('');
+---
+
+<svg class:list={['owl', className]} viewBox="0 0 420 380" data-owl aria-hidden="true" focusable="false">
+  <g filter="url(#paint)">
+    <path d="M60 120C40 60 90 10 140 40L210 72L280 40C330 10 380 60 360 120C400 220 340 362 210 372C80 362 20 220 60 120Z" fill="#8a5a3a"></path>
+    <circle cx="140" cy="172" r="96" fill="#c08a5b"></circle>
+    <circle cx="280" cy="172" r="96" fill="#c08a5b"></circle>
+    <path d={feathers} stroke="#5e3a22" stroke-width="3.5" stroke-linecap="round" fill="none"></path>
+    <path d="M70 96C100 70 150 74 190 104M350 96C320 70 270 74 230 104" stroke="#3a2416" stroke-width="9" fill="none" stroke-linecap="round"></path>
+    <path d="M90 300C130 330 180 340 210 340C240 340 290 330 330 300" stroke="#5e3a22" stroke-width="5" fill="none" stroke-dasharray="2 14" stroke-linecap="round"></path>
+  </g>
+  {
+    eyes.map((cx) => (
+      <g class="owl__eye">
+        <circle cx={cx} cy="172" r="64" fill="#f8c21b" stroke="#2a190f" stroke-width="7" />
+        <circle cx={cx} cy="172" r="44" fill="#f0a116" />
+        <g class="owl__pupil">
+          <circle cx={cx} cy="172" r="30" fill="#120c08" />
+          <circle cx={cx - 10} cy="162" r="8" fill="#fff" />
+        </g>
+        <ellipse class="owl__lid" cx={cx} cy="172" rx="70" ry="70" fill="#8a5a3a" />
+      </g>
+    ))
+  }
+  <path d="M196 214L224 214L210 262Z" fill="#5f5a55" filter="url(#paint)"></path>
+</svg>
+
+<style>
+  .owl__pupil {
+    transform: translate(calc(var(--px, 0) * 22px), calc(var(--py, 0) * 18px));
+    transition: transform 0.25s var(--ease-out);
+  }
+
+  .owl__lid {
+    transform-box: fill-box;
+    transform-origin: 50% 0;
+    transform: scaleY(0);
+    animation: blink 7s infinite;
+  }
+
+  .owl__eye:nth-of-type(2) .owl__lid {
+    animation-delay: 0.04s;
+  }
+
+  @keyframes blink {
+    0%,
+    93%,
+    100% {
+      transform: scaleY(0);
+    }
+    95.5% {
+      transform: scaleY(1);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .owl__lid {
+      animation: none;
+    }
+  }
+</style>

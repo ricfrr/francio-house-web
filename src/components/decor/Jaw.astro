@@ -1,0 +1,77 @@
+---
+// The crocodile's upper jaw, biting down from the pink room into the archive.
+---
+
+<div class="jaw" data-jaw aria-hidden="true">
+  <svg class="jaw__svg" width="100%" height="150">
+    <defs>
+      <pattern id="jaw-teeth" width="58" height="150" patternUnits="userSpaceOnUse">
+        <path d="M3 50L29 50L17 112Z" fill="#fffbea" stroke="#cfc4a4" stroke-width="1.5" stroke-linejoin="round"></path>
+        <path d="M31 50L55 50L44 90Z" fill="#fffbea" stroke="#cfc4a4" stroke-width="1.5" stroke-linejoin="round"></path>
+      </pattern>
+      <pattern id="jaw-scales" width="64" height="58" patternUnits="userSpaceOnUse">
+        <ellipse cx="18" cy="16" rx="13" ry="8" fill="#2f8f2c"></ellipse>
+        <ellipse cx="50" cy="30" rx="11" ry="7" fill="#2f8f2c"></ellipse>
+        <ellipse cx="30" cy="40" rx="6" ry="4" fill="#57c24d"></ellipse>
+      </pattern>
+    </defs>
+    <rect class="jaw__teeth" x="0" y="0" width="100%" height="150" fill="url(#jaw-teeth)"></rect>
+    <rect x="0" y="0" width="100%" height="56" fill="var(--croc)"></rect>
+    <rect x="0" y="0" width="100%" height="50" fill="url(#jaw-scales)"></rect>
+    <rect x="0" y="48" width="100%" height="8" fill="#d8344f"></rect>
+  </svg>
+  <svg class="jaw__eye" viewBox="0 0 120 90">
+    <path d="M6 88C6 30 40 4 66 4C96 4 116 34 116 88Z" fill="var(--croc)"></path>
+    <ellipse cx="62" cy="52" rx="34" ry="30" fill="#ffd23f" stroke="#1d3d14" stroke-width="5"></ellipse>
+    <ellipse class="jaw__slit" cx="62" cy="52" rx="7" ry="24" fill="#111"></ellipse>
+  </svg>
+</div>
+
+<style>
+  .jaw {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 150px;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .jaw__svg {
+    display: block;
+    filter: drop-shadow(0 10px 12px rgb(0 0 0 / 0.35));
+  }
+
+  .jaw__teeth {
+    transform: translateY(-40px);
+    transition: transform 0.7s var(--ease-spring);
+  }
+
+  .jaw.is-in .jaw__teeth {
+    transform: none;
+  }
+
+  .jaw__eye {
+    position: absolute;
+    right: clamp(24px, 8vw, 140px);
+    top: -64px;
+    width: clamp(76px, 9vw, 120px);
+  }
+
+  .jaw__slit {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: slit 6s ease-in-out infinite;
+  }
+
+  @keyframes slit {
+    0%,
+    100% {
+      transform: scaleX(1);
+    }
+    50% {
+      transform: scaleX(2.2);
+    }
+  }
+</style>

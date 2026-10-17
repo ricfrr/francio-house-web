@@ -1,0 +1,322 @@
+---
+import { Image } from 'astro:assets';
+import type { HouseEvent } from '../lib/events';
+import { seeded } from '../lib/events';
+import { formatShort, formatYear } from '../lib/time';
+import Icon from './Icon.astro';
+import Jaw from './decor/Jaw.astro';
+import StringLights from './decor/StringLights.astro';
+
+interface Props {
+  events: HouseEvent[];
+}
+const { events } = Astro.props;
+
+const years = [...new Set(events.map((e) => formatYear(e.start)))];
+const byYear = years.map((year) => ({ year, events: events.filter((e) => formatYear(e.start) === year) }));
+const first = events.at(-1);
+---
+
+<section id="archive" class="room archive" aria-labelledby="archive-title">
+  <Jaw />
+  <StringLights tone="fairy" class="archive__lights" />
+
+  <div class="wrap archive__head">
+    <p class="room-kicker">Room 3 · the blue room</p>
+    <h2 id="archive-title" class="room-title">the house<br />archive</h2>
+    <div class="archive__intro">
+      <p>
+        Every night that happened here: the posters, a few blurry photos, and recordings when someone remembered to press
+        record.
+        {first && <> {events.length} nights since {formatYear(first.start)}.</>}
+      </p>
+      {
+        years.length > 1 && (
+          <div class="filters" role="group" aria-label="Show year" data-filters>
+            <button type="button" class="chip" aria-pressed="true" data-filter="all">
+              All
+            </button>
+            {years.map((y) => (
+              <button type="button" class="chip" aria-pressed="false" data-filter={y}>
+                {y}
+              </button>
+            ))}
+          </div>
+        )
+      }
+    </div>
+  </div>
+
+  {
+    byYear.map(({ year, events }) => (
+      <div class="year" data-year={year}>
+        <h3 class="year__title wrap">
+          <span>{year}</span>
+        </h3>
+        <ul class="collage wrap">
+          {events.flatMap((e, i) => [
+            <li
+              class="tile tile--poster"
+              style={`--rot:${seeded(e.slug, -3.5, 3.5).toFixed(2)}deg;--accent:${e.accent};--reveal-delay:${(i % 4) * 0.06}s`}
+              data-reveal
+            >
+              <a class="tile__main" href={e.url}>
+                <Image
+                  src={e.poster}
+                  alt={e.posterAlt ?? `Poster for ${e.artist}`}
+                  widths={[280, 420, 600]}
+                  sizes="(min-width: 1100px) 22vw, (min-width: 640px) 40vw, 80vw"
+                  loading="lazy"
+                />
+                <span class="tile__caption">
+                  <span class="mono tile__date">{formatShort(e.start)}</span>
+                  <span class="tile__artist">{e.artist}</span>
+                  {e.title !== e.artist && <span class="tile__title">{e.title}</span>}
+                </span>
+              </a>
+              {(e.recordings.length > 0 || e.photos.length > 0) && (
+                <span class="tile__badges">
+                  {e.recordings.slice(0, 1).map((r) => (
+                    <a class="tile__badge" href={r.url} target="_blank" rel="noopener" aria-label={`${r.label}, ${e.artist}`}>
+                      <Icon name="play" /> listen
+                    </a>
+                  ))}
+                  {e.photos.length > 0 && (
+                    <span class="tile__badge tile__badge--quiet">
+                      <Icon name="camera" /> {e.photos.length}
+                    </span>
+                  )}
+                </span>
+              )}
+            </li>,
+            ...e.photos.map((photo, pi) => (
+              <li
+                class="tile tile--photo"
+                style={`--rot:${seeded(e.slug + pi, -5, 5).toFixed(2)}deg`}
+                data-reveal
+              >
+                <a class="tile__main" href={e.url}>
+                  <Image
+                    src={photo}
+                    alt={`Photo from ${e.artist}, ${formatShort(e.start)}`}
+                    widths={[280, 420, 600]}
+                    sizes="(min-width: 1100px) 22vw, (min-width: 640px) 40vw, 80vw"
+                    loading="lazy"
+                  />
+                  <span class="tile__polaroid hand">
+                    {e.artist}, {formatShort(e.start).slice(0, 5)}
+                  </span>
+                </a>
+              </li>
+            )),
+          ])}
+        </ul>
+      </div>
+    ))
+  }
+</section>
+
+<style>
+  .archive {
+    --room-bg: var(--uv);
+    --room-ink: var(--paper);
+    padding: clamp(170px, 18vw, 230px) 0 clamp(120px, 14vw, 200px);
+    background-image:
+      radial-gradient(60% 40% at 15% 10%, rgb(59 91 255 / 0.45), transparent 70%),
+      radial-gradient(50% 35% at 90% 35%, rgb(54 224 143 / 0.22), transparent 70%),
+      radial-gradient(70% 50% at 50% 100%, rgb(59 91 255 / 0.3), transparent 70%),
+      var(--grain);
+    background-size:
+      auto,
+      auto,
+      auto,
+      220px;
+    background-blend-mode: normal, normal, normal, overlay;
+  }
+
+  .archive :global(.archive__lights) {
+    top: 70px;
+    opacity: 0.9;
+  }
+
+  .archive__head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 40ch);
+    align-items: end;
+    gap: 24px 48px;
+    margin-bottom: 40px;
+  }
+
+  .archive__head .room-kicker {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+
+  .archive__head .room-title {
+    color: var(--paper);
+    text-shadow:
+      0 0 24px rgb(59 139 255 / 0.65),
+      0 0 2px rgb(255 255 255 / 0.6);
+  }
+
+  .archive__intro p {
+    margin-bottom: 18px;
+  }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .filters .chip {
+    background: transparent;
+    cursor: pointer;
+    min-height: 36px;
+  }
+
+  .filters .chip[aria-pressed='true'] {
+    background: var(--paper);
+    color: var(--uv);
+  }
+
+  .year[hidden] {
+    display: none;
+  }
+
+  .year__title {
+    margin: clamp(40px, 6vw, 80px) auto 28px;
+    font-size: clamp(4rem, 14vw, 12rem);
+    font-variation-settings: 'wdth' 75;
+    line-height: 0.8;
+    color: transparent;
+    -webkit-text-stroke: 2px #7af7ff;
+    filter: drop-shadow(0 0 14px rgb(122 247 255 / 0.55));
+  }
+
+  .collage {
+    columns: 4 230px;
+    column-gap: clamp(20px, 3vw, 44px);
+    padding: 0;
+  }
+
+  .tile {
+    position: relative;
+    list-style: none;
+    break-inside: avoid;
+    margin: 0 0 clamp(28px, 3.4vw, 48px);
+    transform: rotate(var(--rot));
+    transition: transform 0.45s var(--ease-spring);
+  }
+
+  .tile:hover,
+  .tile:focus-within {
+    transform: rotate(0deg) scale(1.04);
+    z-index: 5;
+  }
+
+  .tile__main {
+    display: block;
+    text-decoration: none;
+    color: var(--paper);
+  }
+
+  .tile--poster img {
+    width: 100%;
+    box-shadow:
+      0 18px 30px rgb(0 0 0 / 0.5),
+      0 0 0 1px rgb(255 255 255 / 0.06);
+  }
+
+  .tile__caption {
+    display: grid;
+    gap: 2px;
+    padding: 12px 2px 0;
+  }
+
+  .tile__date {
+    font-size: 0.72rem;
+    color: #7af7ff;
+  }
+
+  .tile__artist {
+    font-weight: 800;
+    font-size: 1.35rem;
+    line-height: 1;
+    font-variation-settings: 'wdth' 80;
+  }
+
+  .tile__title {
+    font-size: 0.9rem;
+    font-weight: 300;
+    font-style: italic;
+    opacity: 0.85;
+  }
+
+  .tile__badges {
+    position: absolute;
+    top: 10px;
+    right: -8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    z-index: 2;
+  }
+
+  .tile__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px 5px 7px;
+    border-radius: 999px;
+    background: var(--sun);
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 4px 10px rgb(0 0 0 / 0.35);
+    transform: rotate(4deg);
+  }
+
+  .tile__badge :global(.icon) {
+    width: 16px;
+    height: 16px;
+  }
+
+  a.tile__badge:hover {
+    background: #36e08f;
+  }
+
+  .tile__badge--quiet {
+    background: var(--paper);
+  }
+
+  /* photos as polaroids */
+  .tile--photo .tile__main {
+    padding: 10px 10px 0;
+    background: #fbfaf5;
+    color: var(--ink);
+    box-shadow: 0 16px 28px rgb(0 0 0 / 0.5);
+  }
+
+  .tile--photo img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+  }
+
+  .tile__polaroid {
+    display: block;
+    padding: 10px 4px 14px;
+    font-size: 1.05rem;
+    text-align: center;
+  }
+
+  @media (max-width: 760px) {
+    .archive__head {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

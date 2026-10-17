@@ -1,0 +1,367 @@
+---
+// The street: the first thing visitors see. Hidden for returning visitors (see Base.astro)
+// and when JavaScript is off, in which case the site simply starts inside.
+const captions = [
+  { from: 0, to: 0.15, text: "From the street, it's just a white house." },
+  { from: 0.19, to: 0.34, text: 'White walls. Shutters half down. Nothing to see.' },
+  { from: 0.39, to: 0.55, text: 'Eighteen steps up the side.' },
+  { from: 0.6, to: 0.73, text: 'Listen. Something on the other side.' },
+  { from: 0.76, to: 0.86, text: 'Come in.' },
+];
+---
+
+<div id="outside" class="outside" data-outside role="region" aria-label="Outside the house">
+  <svg class="outside__facade" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="facade-sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#1b5fe0"></stop>
+        <stop offset="0.75" stop-color="#9fd0ff"></stop>
+      </linearGradient>
+    </defs>
+    <rect width="1600" height="1000" fill="url(#facade-sky)"></rect>
+    <g fill="#3f5f31">
+      <ellipse cx="200" cy="560" rx="150" ry="46"></ellipse>
+      <ellipse cx="1380" cy="520" rx="170" ry="50"></ellipse>
+      <ellipse cx="1290" cy="560" rx="110" ry="36"></ellipse>
+    </g>
+    <path d="M196 560v220M1376 520v260" stroke="#5a4436" stroke-width="12"></path>
+    <rect y="760" width="1600" height="240" fill="#a8a27f"></rect>
+    <path d="M380 760h900l140 240H220Z" fill="#cbc5ba"></path>
+    <!-- side wall with the stairs -->
+    <path d="M430 372 560 330v430l-130-22Z" fill="#e4e0d8"></path>
+    <path d="M430 470h44v92h-44Z" fill="#6b4a37"></path>
+    <path class="outside__facade-gap" d="M430 560h44v4h-44Z" fill="#ff2f8c"></path>
+    <path d="M560 760l-30 0-10-14-10 0-10-14-10 0-10-14-10 0-10-14-10 0-10-14-10 0-10-14-10 0-10-14-10 0-10-14v198Z" fill="#c8c4bb"></path>
+    <path d="M560 668 420 566M560 690 420 588M560 712 420 610M560 734 420 632" stroke="#f6f6f2" stroke-width="4"></path>
+    <path d="M410 560h40v-2" stroke="#f6f6f2" stroke-width="4"></path>
+    <!-- front -->
+    <rect x="560" y="330" width="600" height="430" fill="#f3f0ea"></rect>
+    <path d="M520 320 860 268 1200 320Z" fill="#8a5a43"></path>
+    <rect x="520" y="318" width="680" height="16" fill="#5b3a2a"></rect>
+    <rect x="975" y="236" width="34" height="86" fill="#f3f0ea"></rect>
+    <rect x="968" y="232" width="48" height="8" fill="#5b3a2a"></rect>
+    <g fill="#1d242c">
+      <rect x="650" y="408" width="62" height="118"></rect>
+      <rect x="1010" y="408" width="62" height="118"></rect>
+      <rect x="610" y="610" width="140" height="132"></rect>
+      <rect x="950" y="598" width="160" height="150"></rect>
+    </g>
+    <g fill="#d9d6cf">
+      <rect x="650" y="408" width="62" height="48"></rect>
+      <rect x="1010" y="408" width="62" height="48"></rect>
+    </g>
+    <path d="M610 654h140M610 698h140M645 610v132M680 610v132M715 610v132" stroke="#f7f6f2" stroke-width="4"></path>
+    <path d="M972 598v150M994 598v150M1016 598v150M1038 598v150M1060 598v150M1082 598v150" stroke="#2a2b2e" stroke-width="4"></path>
+    <rect x="545" y="542" width="630" height="14" fill="#efece6"></rect>
+    <path d="M545 492h630M545 506h630M545 520h630M545 534h630M545 486h630" stroke="#f6f6f2" stroke-width="4"></path>
+    <path d="M548 486v56M708 486v56M868 486v56M1028 486v56M1172 486v56" stroke="#f6f6f2" stroke-width="5"></path>
+  </svg>
+
+  <canvas class="outside__canvas" data-street-canvas aria-hidden="true"></canvas>
+
+  <div class="outside__ui">
+    <p class="outside__plate mono" aria-hidden="true">francio.house</p>
+    <button class="outside__skip mono" type="button" data-skip>Skip intro <span aria-hidden="true">→</span></button>
+
+    <div class="outside__captions" aria-hidden="true">
+      {
+        captions.map((c) => (
+          <p data-from={c.from} data-to={c.to}>
+            {c.text}
+          </p>
+        ))
+      }
+    </div>
+
+    <div class="outside__bell">
+      <button class="bell" type="button" data-enter>
+        <span class="bell__label" aria-hidden="true">FRANCIO</span>
+        <span class="bell__button" aria-hidden="true"></span>
+        <span class="bell__text">Enter the house</span>
+      </button>
+      <p class="outside__hint mono" aria-hidden="true">or scroll to walk up <span>↓</span></p>
+    </div>
+  </div>
+</div>
+<div class="street-spacer" data-spacer aria-hidden="true"></div>
+
+<style>
+  .outside,
+  .street-spacer {
+    display: none;
+  }
+
+  :global(html[data-mode='outside']) .outside {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    height: 100vh;
+    height: 100lvh;
+    transition: opacity 0.5s var(--ease-out);
+  }
+
+  :global(html[data-mode='outside']) .street-spacer {
+    display: block;
+    height: 620vh;
+  }
+
+  :global(html[data-mode='outside'][data-motion='reduced']) .street-spacer {
+    height: 60vh;
+  }
+
+  .outside.is-leaving {
+    opacity: 0;
+  }
+
+  .outside__facade,
+  .outside__canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .outside__facade {
+    transition: opacity 0.8s;
+  }
+
+  .outside__facade-gap {
+    animation: gap 0.536s steps(1) infinite;
+  }
+
+  @keyframes gap {
+    0% {
+      fill: #ff2f8c;
+    }
+    50% {
+      fill: #36e08f;
+    }
+  }
+
+  .outside__canvas {
+    opacity: 0;
+    transition: opacity 0.8s;
+  }
+
+  .outside.is-3d .outside__canvas {
+    opacity: 1;
+  }
+
+  /* the fallback must disappear entirely, or it would cover the view through the door */
+  .outside.is-3d .outside__facade {
+    visibility: hidden;
+    transition: visibility 0s linear 0.9s;
+  }
+
+  .outside__ui {
+    position: absolute;
+    inset: 0;
+    color: #fff;
+    opacity: var(--ui, 1);
+    pointer-events: none;
+  }
+
+  .outside__ui > * {
+    pointer-events: auto;
+  }
+
+  .outside__plate {
+    position: absolute;
+    top: max(18px, env(safe-area-inset-top));
+    left: var(--gutter);
+    margin: 0;
+    padding: 6px 10px;
+    font-size: 0.78rem;
+    color: #2b2b2b;
+    background: #f3f0ea;
+    border: 1px solid #c9c4ba;
+    border-radius: 3px;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.15);
+  }
+
+  .outside__skip {
+    position: absolute;
+    top: max(14px, env(safe-area-inset-top));
+    right: var(--gutter);
+    min-height: 40px;
+    padding: 8px 14px;
+    border: 1.5px solid rgb(255 255 255 / 0.8);
+    border-radius: 999px;
+    background: rgb(0 0 0 / 0.12);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+
+  .outside__skip:hover {
+    background: #fff;
+    color: var(--ink);
+  }
+
+  .outside__captions {
+    position: absolute;
+    left: 50%;
+    bottom: calc(150px + env(safe-area-inset-bottom));
+    width: min(90vw, 760px);
+    transform: translateX(-50%);
+    text-align: center;
+  }
+
+  .outside__captions p {
+    position: absolute;
+    inset: auto 0 0;
+    margin: 0;
+    font-size: clamp(1.5rem, 3.4vw, 2.6rem);
+    font-weight: 300;
+    font-style: italic;
+    line-height: 1.1;
+    text-shadow:
+      0 2px 24px rgb(0 20 60 / 0.45),
+      0 1px 2px rgb(0 0 0 / 0.3);
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity 0.6s var(--ease-out),
+      transform 0.8s var(--ease-out);
+  }
+
+  .outside__captions p.is-on {
+    opacity: 1;
+    transform: none;
+  }
+
+  .outside__bell {
+    position: absolute;
+    left: 50%;
+    bottom: max(24px, env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    display: grid;
+    justify-items: center;
+    gap: 10px;
+  }
+
+  /* an intercom plate, like the one by the gate */
+  .bell {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 56px;
+    padding: 10px 20px 10px 10px;
+    border: 1px solid #a9a397;
+    border-radius: 12px;
+    background: linear-gradient(170deg, #f1eee8, #cfc9bd);
+    color: var(--ink);
+    box-shadow:
+      inset 0 1px 0 #fff,
+      0 14px 34px rgb(0 0 0 / 0.28);
+    cursor: pointer;
+    transition: transform 0.3s var(--ease-spring);
+  }
+
+  .bell:hover {
+    transform: translateY(-3px) rotate(-1deg);
+  }
+
+  .bell__label {
+    padding: 5px 9px 4px;
+    background: #141414;
+    color: #f6f6f6;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.82rem;
+    letter-spacing: 0.24em;
+    border-radius: 2px;
+    text-shadow: 0 1px 0 rgb(255 255 255 / 0.25);
+    transform: rotate(-1.5deg);
+  }
+
+  .bell__button {
+    position: relative;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff, #c4beb1 58%, #8d877b);
+    box-shadow:
+      inset 0 -2px 3px rgb(0 0 0 / 0.3),
+      0 2px 3px rgb(0 0 0 / 0.3);
+  }
+
+  .bell__button::after {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    border: 2px solid #ff2f8c;
+    opacity: 0;
+    animation: ring 1.07s ease-out infinite;
+  }
+
+  .bell:hover .bell__button::after,
+  .bell:focus-visible .bell__button::after {
+    opacity: 1;
+  }
+
+  .bell:active .bell__button {
+    transform: scale(0.92);
+    box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.4);
+  }
+
+  @keyframes ring {
+    from {
+      transform: scale(0.9);
+      opacity: 1;
+    }
+    to {
+      transform: scale(1.5);
+      opacity: 0;
+    }
+  }
+
+  .bell__text {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.92rem;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 420px) {
+    .bell {
+      gap: 10px;
+      padding-right: 14px;
+    }
+
+    .bell__label {
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+    }
+
+    .bell__text {
+      font-size: 0.8rem;
+    }
+  }
+
+  .outside__hint {
+    margin: 0;
+    font-size: 0.75rem;
+    text-shadow: 0 1px 8px rgb(0 0 0 / 0.4);
+  }
+
+  .outside__hint span {
+    display: inline-block;
+    animation: bob 1.6s ease-in-out infinite;
+  }
+
+  @keyframes bob {
+    50% {
+      transform: translateY(4px);
+    }
+  }
+</style>
+
+<script>
+  import { initOutside } from './intro/controller';
+  initOutside();
+</script>

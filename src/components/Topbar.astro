@@ -1,0 +1,243 @@
+---
+import Icon from './Icon.astro';
+interface Props {
+  /** On the home page "step outside" replays the street; elsewhere it links to it. */
+  home?: boolean;
+}
+const { home = false } = Astro.props;
+const base = home ? '' : '/';
+const rooms = [
+  { href: `${base}#next`, label: 'Next' },
+  { href: `${base}#upcoming`, label: 'Upcoming' },
+  { href: `${base}#archive`, label: 'Archive' },
+  { href: `${base}#house`, label: 'The house' },
+];
+---
+
+<header class="topbar" data-topbar>
+  <a class="wordmark" href={home ? '#next' : '/'} aria-label="Francio House, home">
+    <svg class="wordmark__house" viewBox="0 0 40 40" aria-hidden="true">
+      <path d="M5 18 20 6l15 12" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"></path>
+      <path d="M9 16v19h22V16" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"></path>
+      <rect class="wordmark__door" x="16.5" y="22" width="7" height="13"></rect>
+    </svg>
+    <span>francio<b>house</b></span>
+  </a>
+
+  <nav class="rooms" aria-label="Rooms">
+    <ul>
+      {
+        rooms.map((r) => (
+          <li>
+            <a href={r.href}>{r.label}</a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+
+  {
+    home ? (
+      <button class="outside-btn" type="button" data-go-outside>
+        <Icon name="door" />
+        <span>Step outside</span>
+      </button>
+    ) : (
+      <a class="outside-btn" href="/?intro">
+        <Icon name="door" />
+        <span>Step outside</span>
+      </a>
+    )
+  }
+</header>
+
+<style>
+  .topbar {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px var(--gutter);
+    padding-top: max(12px, env(safe-area-inset-top));
+    color: var(--paper);
+    transition: transform 0.45s var(--ease-out);
+  }
+
+  /* the blur lives on a pseudo-element: a filter on .topbar itself would trap
+     the fixed bottom nav (phones) inside the bar */
+  .topbar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: rgb(21 16 26 / 0.82);
+    backdrop-filter: blur(12px) saturate(1.4);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    box-shadow: 0 1px 0 rgb(255 255 255 / 0.08);
+    opacity: 0;
+    transition: opacity 0.35s;
+  }
+
+  .topbar.is-scrolled::before {
+    opacity: 1;
+  }
+
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 1.5rem;
+    font-variation-settings: 'wdth' 75;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    text-shadow: 0 1px 12px rgb(0 0 0 / 0.25);
+  }
+
+  .wordmark b {
+    font-weight: 300;
+    margin-left: 1px;
+  }
+
+  .wordmark__house {
+    width: 32px;
+    height: 32px;
+    flex: none;
+  }
+
+  .wordmark__door {
+    fill: var(--sun);
+    transition: fill 0.3s;
+    animation: door-pulse 2.14s steps(1) infinite;
+  }
+
+  @keyframes door-pulse {
+    0% {
+      fill: var(--sun);
+    }
+    25% {
+      fill: #ff3d8b;
+    }
+    50% {
+      fill: #36e08f;
+    }
+    75% {
+      fill: #3b8bff;
+    }
+  }
+
+  .rooms {
+    margin-left: auto;
+  }
+
+  .rooms ul {
+    display: flex;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .rooms a {
+    display: block;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition:
+      background-color 0.2s,
+      color 0.2s;
+  }
+
+  .rooms a:hover,
+  .rooms a[aria-current='true'] {
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  .outside-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 6px 14px 6px 10px;
+    border: 1.5px solid currentColor;
+    border-radius: 999px;
+    background: transparent;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .outside-btn:hover {
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  .outside-btn .icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* phones: rooms become a floating bar at the bottom, within thumb reach */
+  @media (max-width: 760px) {
+    .rooms {
+      position: fixed;
+      left: 50%;
+      bottom: max(12px, env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      margin: 0;
+      padding: 5px;
+      border-radius: 999px;
+      background: rgb(21 16 26 / 0.86);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgb(0 0 0 / 0.35);
+      max-width: calc(100vw - 24px);
+    }
+
+    .rooms ul {
+      gap: 0;
+    }
+
+    .rooms a {
+      padding: 9px 10px;
+      font-size: 0.68rem;
+      white-space: nowrap;
+    }
+
+    .outside-btn {
+      margin-left: auto;
+    }
+
+    .outside-btn span {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+
+    .outside-btn {
+      padding: 8px;
+    }
+  }
+
+  :global(html[data-mode='outside']) .rooms {
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wordmark__door {
+      animation: none;
+    }
+  }
+</style>

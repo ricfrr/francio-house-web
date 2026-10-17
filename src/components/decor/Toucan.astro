@@ -1,0 +1,27 @@
+---
+interface Props {
+  class?: string;
+  /** Scroll parallax factor (0 = none). */
+  parallax?: number;
+}
+const { class: className = '', parallax } = Astro.props;
+---
+
+<svg class:list={['toucan', className]} data-parallax={parallax} viewBox="0 0 320 300" aria-hidden="true" focusable="false">
+  <g filter="url(#paint)">
+    <path d="M-10 252C80 240 160 246 330 262" fill="none" stroke="#6b4226" stroke-width="13" stroke-linecap="round"></path>
+    <path d="M44 226L22 298L62 298L74 232Z" fill="#121212"></path>
+    <ellipse cx="85" cy="165" rx="52" ry="86" transform="rotate(-12 85 165)" fill="#121212"></ellipse>
+    <ellipse cx="96" cy="236" rx="22" ry="11" fill="#e3242b"></ellipse>
+    <path d="M95 95C135 90 152 130 142 175C132 197 105 197 97 176Z" fill="#fff0b3"></path>
+    <circle cx="100" cy="80" r="44" fill="#121212"></circle>
+    <ellipse cx="122" cy="72" rx="17" ry="15" fill="#4fc3ff"></ellipse>
+    <circle cx="124" cy="72" r="7" fill="#111" stroke="#d6f6ff" stroke-width="2"></circle>
+    <path d="M132 96C180 100 240 106 290 104C260 117 200 121 136 113Z" fill="#f05a28"></path>
+    <path d="M130 56C190 30 280 40 316 92C300 104 270 106 240 104C200 102 160 98 132 96Z" fill="#ff8a1c"></path>
+    <path d="M130 56C190 30 280 40 316 92C280 70 220 62 132 72Z" fill="#ffd23f"></path>
+    <path d="M298 78C308 84 316 92 316 92C306 100 296 103 284 104C292 96 296 88 298 78Z" fill="#1a1a1a"></path>
+    <path d="M131 56L133 112" stroke="#2fc24a" stroke-width="6" stroke-linecap="round"></path>
+    <path d="M70 246l-8 10M84 248l-4 11M100 247l2 11" stroke="#8d8d8d" stroke-width="5" stroke-linecap="round"></path>
+  </g>
+</svg>

@@ -1,0 +1,369 @@
+/* ------------------------------------------------------------------
+   Francio House — global styles
+   Rooms are named after the real walls of the house:
+   magenta + mint (living room), pink (crocodile wall),
+   UV night (concert room), sky (owl wall), terrazzo (the floor).
+------------------------------------------------------------------- */
+
+:root {
+  --ink: #15101a;
+  --ink-soft: #3a2f3f;
+  --paper: #fbf6ec;
+  --paper-2: #f1e8d8;
+
+  --magenta: #d3166d;
+  --magenta-deep: #9c0e50;
+  --mint: #93e2b7;
+  --mint-deep: #4fb784;
+  --pink: #f28dba;
+  --pink-deep: #d9649a;
+  --croc: #3fae3a;
+  --croc-deep: #23752a;
+  --uv: #170f55;
+  --uv-deep: #0a0630;
+  --electric: #3b5bff;
+  --sky: #74c6f4;
+  --sky-deep: #3d8fd0;
+  --sun: #ffd23f;
+  --orange: #ff6b2c;
+  --leaf: #1f7a3c;
+  --terrazzo: #eadccb;
+
+  --font-display: 'Bricolage Grotesque Variable', 'Arial Narrow', system-ui, sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, Menlo, monospace;
+  --font-hand: 'Permanent Marker', 'Marker Felt', 'Comic Sans MS', cursive;
+
+  --gutter: clamp(16px, 4vw, 56px);
+  --max: 1360px;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* painted-wall grain, multiplied over every room */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .3 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  background: var(--ink);
+  scroll-padding-top: 80px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html[data-mode='inside'] {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--ink);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 18px;
+  line-height: 1.5;
+  font-variation-settings: 'wdth' 100;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+img {
+  height: auto;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--sun);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: var(--sun);
+  color: var(--ink);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  line-height: 0.92;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0 0 1em;
+  text-wrap: pretty;
+}
+
+/* ---------- helpers ---------- */
+
+.sr-only {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: fixed;
+  left: 12px;
+  top: 12px;
+  z-index: 1000;
+  padding: 10px 16px;
+  background: var(--sun);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  border-radius: 999px;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  letter-spacing: 0;
+}
+
+.hand {
+  font-family: var(--font-hand);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.wrap {
+  width: min(100% - var(--gutter) * 2, var(--max));
+  margin-inline: auto;
+}
+
+/* ---------- rooms ---------- */
+
+.room {
+  --room-bg: var(--paper);
+  --room-ink: var(--ink);
+  position: relative;
+  color: var(--room-ink);
+  background-color: var(--room-bg);
+  background-image: var(--grain);
+  background-blend-mode: multiply;
+  background-size: 220px;
+  isolation: isolate;
+}
+
+.room-title {
+  font-size: clamp(3rem, 11vw, 9.5rem);
+  font-variation-settings: 'wdth' 75;
+  font-weight: 800;
+  text-transform: lowercase;
+  line-height: 0.82;
+}
+
+.room-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 1rem;
+}
+
+.room-kicker::before {
+  content: '';
+  width: 2.2em;
+  height: 2px;
+  background: currentColor;
+}
+
+/* ---------- buttons & chips ---------- */
+
+.btn {
+  --btn-bg: var(--ink);
+  --btn-ink: var(--paper);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  min-height: 48px;
+  padding: 0.65em 1.25em;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--btn-bg);
+  color: var(--btn-ink);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.92rem;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 var(--ink);
+  transition:
+    transform 0.25s var(--ease-spring),
+    box-shadow 0.25s var(--ease-out);
+}
+
+.btn:hover {
+  transform: translate(-2px, -2px) rotate(-1deg);
+  box-shadow: 6px 6px 0 var(--ink);
+}
+
+.btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+.btn--light {
+  --btn-bg: var(--paper);
+  --btn-ink: var(--ink);
+}
+
+.btn--sun {
+  --btn-bg: var(--sun);
+  --btn-ink: var(--ink);
+}
+
+.btn--ghost {
+  --btn-bg: transparent;
+  --btn-ink: currentColor;
+  box-shadow: none;
+}
+
+.btn--ghost:hover {
+  box-shadow: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0.4em 0.85em;
+  border-radius: 999px;
+  border: 1.5px solid currentColor;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    transform 0.25s var(--ease-spring);
+}
+
+a.chip:hover {
+  background: var(--room-ink, var(--ink));
+  color: var(--room-bg, var(--paper));
+  transform: rotate(-3deg) scale(1.05);
+}
+
+.chip svg {
+  width: 1.1em;
+  height: 1.1em;
+}
+
+/* masking tape */
+.tape {
+  position: absolute;
+  z-index: 3;
+  width: 34%;
+  max-width: 120px;
+  height: 28px;
+  background: rgb(246 236 200 / 0.78);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.15);
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 20' preserveAspectRatio='none'%3E%3Cpath d='M2 0 L98 0 L96 4 L100 8 L97 12 L100 16 L98 20 L2 20 L0 16 L3 12 L0 8 L3 4 Z'/%3E%3C/svg%3E");
+  mask-size: 100% 100%;
+  pointer-events: none;
+}
+
+/* reveal on scroll (only when JS is running and motion is allowed) */
+@media (prefers-reduced-motion: no-preference) {
+  /* uses `translate`, so it composes with each element's own `transform` */
+  .js [data-reveal] {
+    opacity: 0;
+    translate: 0 48px;
+    transition:
+      opacity 0.8s var(--ease-out) var(--reveal-delay, 0s),
+      translate 0.9s var(--ease-out) var(--reveal-delay, 0s),
+      transform 0.45s var(--ease-spring);
+  }
+
+  .js [data-reveal].is-in {
+    opacity: 1;
+    translate: none;
+  }
+}
+
+/* events that ended after the last build are hidden by a small script */
+[data-ends].is-over {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ---------- the street intro: the site waits behind the door ---------- */
+
+html[data-mode='outside'] #interior {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  transform: scale(var(--approach, 1));
+  transform-origin: 50% 46%;
+}
+
+/* the page is scaled down a little behind the door: keep its edges painted */
+html[data-mode='outside'],
+html[data-mode='outside'] body {
+  background: var(--magenta);
+}
+
+html[data-mode='outside'] .skip-link {
+  display: none;
+}
+
+html.is-autoplay {
+  overflow: hidden;
+}

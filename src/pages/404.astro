@@ -1,0 +1,39 @@
+---
+import Base from '../layouts/Base.astro';
+import Topbar from '../components/Topbar.astro';
+import JungleSprite from '../components/decor/JungleSprite.astro';
+import OwlFace from '../components/decor/OwlFace.astro';
+---
+
+<Base title="Wrong door">
+  <JungleSprite />
+  <Topbar />
+  <main class="room lost">
+    <OwlFace />
+    <h1 class="room-title">wrong<br />door</h1>
+    <p>This room doesn't exist — or the party moved somewhere else.</p>
+    <a class="btn btn--sun" href="/">Back inside</a>
+  </main>
+</Base>
+
+<script>
+  import { initInside } from '../scripts/inside';
+  initInside();
+</script>
+
+<style>
+  .lost {
+    --room-bg: var(--sky);
+    min-height: 100vh;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 20px;
+    padding: 120px var(--gutter) 80px;
+    text-align: center;
+  }
+
+  .lost :global(.owl) {
+    width: min(70vw, 320px);
+  }
+</style>

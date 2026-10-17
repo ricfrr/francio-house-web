@@ -1,0 +1,32 @@
+---
+// Shared SVG symbols and filters. Include once per page.
+import { monstera, palm, heart } from '../../lib/decor';
+const leaves = { monstera: monstera(), palm: palm(), heart: heart() };
+---
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    {
+      Object.entries(leaves).map(([name, leaf]) => (
+        <symbol id={`leaf-${name}`} viewBox="0 0 200 240">
+          <g fill="currentColor">
+            {leaf.blade.map((d) => (
+              <path d={d} />
+            ))}
+          </g>
+          <path d={leaf.veins} fill="none" stroke="var(--vein, rgb(0 0 0 / 0.22))" stroke-width="2.4" stroke-linecap="round" />
+        </symbol>
+      ))
+    }
+    <!-- rough, hand-painted edges -->
+    <filter id="paint" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7" result="t" />
+      <feDisplacementMap in="SourceGraphic" in2="t" scale="7" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <filter id="spray" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="2" result="n" />
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G" result="d" />
+      <feGaussianBlur in="d" stdDeviation="0.6" />
+    </filter>
+  </defs>
+</svg>

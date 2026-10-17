@@ -1,0 +1,27 @@
+---
+import { drips } from '../../lib/decor';
+interface Props {
+  /** CSS background of the room above (a colour or a gradient), dripping into this one. */
+  bg: string;
+  seed?: number;
+}
+const { bg, seed = 1 } = Astro.props;
+const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 90' preserveAspectRatio='none'><path d='${drips(seed)}'/></svg>`;
+const mask = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+---
+
+<div class="drips" aria-hidden="true" style={`background:${bg};-webkit-mask-image:${mask};mask-image:${mask}`}></div>
+
+<style>
+  .drips {
+    position: absolute;
+    top: -1px;
+    left: 0;
+    width: 100%;
+    height: clamp(44px, 7vw, 90px);
+    z-index: 2;
+    pointer-events: none;
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+  }
+</style>

@@ -1,0 +1,12 @@
+---
+interface Props {
+  kind?: 'monstera' | 'palm' | 'heart';
+  class?: string;
+  style?: string;
+}
+const { kind = 'monstera', class: className = '', style } = Astro.props;
+---
+
+<svg class:list={['leaf', className]} viewBox="0 0 200 240" style={style} aria-hidden="true" focusable="false">
+  <use href={`#leaf-${kind}`}></use>
+</svg>

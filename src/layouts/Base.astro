@@ -1,0 +1,74 @@
+---
+import '@fontsource-variable/bricolage-grotesque/standard.css';
+import '@fontsource/space-mono/400.css';
+import '@fontsource/space-mono/700.css';
+import '@fontsource/permanent-marker/400.css';
+import '../styles/global.css';
+import { site } from '../site.config';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Absolute or root-relative URL of the share image. */
+  image?: string;
+  /** Home page only: decides before first paint whether to show the street intro. */
+  intro?: boolean;
+  themeColor?: string;
+}
+
+const { title, description = site.description, image, intro = false, themeColor = '#d3166d' } = Astro.props;
+const fullTitle = title ? `${title} · ${site.name}` : `${site.name} — concerts in a house`;
+const canonical = new URL(Astro.url.pathname, site.url).href;
+const shareImage = new URL(image ?? '/og.jpg', site.url).href;
+---
+
+<!doctype html>
+<html lang="en" data-mode="inside">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="theme-color" content={themeColor} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={shareImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <slot name="head" />
+
+    <script is:inline>
+      document.documentElement.classList.add('js');
+    </script>
+    {
+      intro && (
+        <script is:inline>
+          (function () {
+            // Show the street intro unless: the visitor has been inside before,
+            // they followed a link to a section (#archive), or asked to skip (?inside).
+            var q = new URLSearchParams(location.search);
+            var seen = false;
+            try { seen = localStorage.getItem('fh:inside') === '1'; } catch (e) {}
+            var outside = q.has('intro') || (!seen && !location.hash && !q.has('inside'));
+            if (outside) {
+              document.documentElement.dataset.mode = 'outside';
+              // safety net: if the intro script never starts, open the door anyway
+              setTimeout(function () {
+                if (!window.__fhStreet) document.documentElement.dataset.mode = 'inside';
+              }, 9000);
+            }
+          })();
+        </script>
+      )
+    }
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

@@ -1,0 +1,575 @@
+---
+import { Image } from 'astro:assets';
+import type { HouseEvent } from '../lib/events';
+import { formatDayMonth, formatWeekday, formatLong } from '../lib/time';
+import { site } from '../site.config';
+import EventLinks from './EventLinks.astro';
+import Icon from './Icon.astro';
+import Fringe from './decor/Fringe.astro';
+import StringLights from './decor/StringLights.astro';
+import Macaw from './decor/Macaw.astro';
+import Leaf from './decor/Leaf.astro';
+
+interface Props {
+  /** The next few upcoming events. The first one that hasn't ended is shown. */
+  candidates: HouseEvent[];
+}
+const { candidates } = Astro.props;
+const isUrl = (s?: string) => !!s && /^(https?:|mailto:)/.test(s);
+---
+
+<section id="next" class="room hero" aria-labelledby="next-title" tabindex="-1">
+  <div class="hero__wall hero__wall--pink" aria-hidden="true"></div>
+  <div class="hero__wall hero__wall--mint" aria-hidden="true"></div>
+  <div class="hero__corner" aria-hidden="true"></div>
+
+  <div class="hero__ceiling" aria-hidden="true">
+    <StringLights tone="warm" />
+    <Fringe />
+  </div>
+
+  <Macaw class="hero__macaw" parallax={0.12} />
+  <Leaf kind="monstera" class="hero__leaf hero__leaf--a" />
+  <Leaf kind="palm" class="hero__leaf hero__leaf--b" />
+  <Leaf kind="monstera" class="hero__leaf hero__leaf--c" />
+  <div class="hero__vine" aria-hidden="true">
+    {
+      [0, 1, 2, 3, 4, 5].map((i) => (
+        <Leaf kind="heart" class="hero__vine-leaf" style={`--i:${i}`} />
+      ))
+    }
+  </div>
+
+  <h2 id="next-title" class="sr-only">Next at the house</h2>
+
+  {
+    candidates.map((e, i) => (
+      <article class="hero__slot" data-ends={e.end.toISOString()} data-slot hidden={i > 0} style={`--accent:${e.accent};--accent-ink:${e.ink}`}>
+        <div class="hero__poster-col">
+          <figure class="hero__poster" data-tilt>
+            <span class="tape" style="left:8%;top:-12px;transform:rotate(-8deg)" />
+            <span class="tape" style="right:6%;top:-10px;transform:rotate(6deg)" />
+            <a href={e.url} tabindex="-1" aria-hidden="true">
+              <Image
+                src={e.poster}
+                alt={e.posterAlt ?? `Poster for ${e.artist}`}
+                widths={[420, 640, 900, 1200]}
+                sizes="(min-width: 960px) 38vw, 82vw"
+                loading={i === 0 ? 'eager' : 'lazy'}
+                fetchpriority={i === 0 ? 'high' : 'auto'}
+              />
+            </a>
+            <span class="hero__shine" aria-hidden="true" />
+          </figure>
+        </div>
+
+        <div class="hero__info">
+          <p class="hero__tag hand">next at the house ↘</p>
+          <p class="hero__when mono">
+            <time datetime={e.start.toISOString()}>
+              <span class="hero__day">{formatWeekday(e.start)}</span>
+              <span class="hero__date">{formatDayMonth(e.start)}</span>
+            </time>
+            <span class="hero__rel" data-rel={e.start.toISOString()} data-rel-end={e.end.toISOString()}>
+              {formatLong(e.start)}
+            </span>
+          </p>
+          <h3 class="hero__artist">
+            <a href={e.url}>{e.artist}</a>
+          </h3>
+          {e.title !== e.artist && <p class="hero__title">{e.title}</p>}
+          {e.genre && <p class="hero__genre mono">{e.genre}</p>}
+          {e.lineup.length > 0 && <p class="hero__lineup mono">+ {e.lineup.join(' · ')}</p>}
+          <p class="hero__summary">{e.summary}</p>
+
+          <dl class="stub">
+            {e.doors && (
+              <div>
+                <dt>Doors</dt>
+                <dd>{e.doors}</dd>
+              </div>
+            )}
+            <div>
+              <dt>Music</dt>
+              <dd>{e.time}</dd>
+            </div>
+            <div class="stub__wide">
+              <dt>Entry</dt>
+              <dd>{e.entry}</dd>
+            </div>
+            <div class="stub__wide">
+              <dt>Where</dt>
+              <dd>{site.whereNote}</dd>
+            </div>
+          </dl>
+
+          <div class="hero__actions">
+            {isUrl(e.rsvp) ? (
+              <a class="btn btn--sun" href={e.rsvp} target="_blank" rel="noopener">
+                RSVP
+                <Icon name="arrow" />
+              </a>
+            ) : (
+              e.rsvp && <p class="hero__rsvp mono">{e.rsvp}</p>
+            )}
+            <a class="btn btn--light" href={e.url}>
+              Full details
+            </a>
+            <a class="btn btn--ghost" href={`/events/${e.slug}.ics`} download>
+              <Icon name="calendar" />
+              Add to calendar
+            </a>
+          </div>
+
+          <EventLinks links={e.links} artist={e.artist} class="hero__links" />
+        </div>
+      </article>
+    ))
+  }
+
+  <article class="hero__slot hero__empty" data-slot-empty hidden={candidates.length > 0}>
+    <div class="hero__info">
+      <p class="hero__tag hand">shhh…</p>
+      <h3 class="hero__artist">The house is resting.</h3>
+      <p class="hero__summary">
+        No concerts on the calendar right now. New dates usually appear on Instagram first — or have a look around the archive.
+      </p>
+      <div class="hero__actions">
+        <a class="btn btn--sun" href={site.contact.instagram} target="_blank" rel="noopener">Follow {site.contact.instagramHandle}</a>
+        <a class="btn btn--light" href="#archive">The archive</a>
+      </div>
+    </div>
+  </article>
+</section>
+
+<style>
+  .hero:focus {
+    outline: none;
+  }
+
+  .hero {
+    --split: 52%;
+    --room-bg: var(--magenta);
+    min-height: 100vh;
+    min-height: 100svh;
+    overflow: clip;
+    display: grid;
+    padding: calc(clamp(90px, 16vh, 180px) + 92px) 0 clamp(48px, 8vh, 96px);
+  }
+
+  /* two walls meeting in a corner, like the living room */
+  .hero__wall {
+    position: absolute;
+    inset: 0;
+    background-image: var(--grain);
+    background-size: 220px;
+    background-blend-mode: multiply;
+    z-index: -2;
+  }
+
+  .hero__wall--pink {
+    right: calc(100% - var(--split));
+    background-color: var(--magenta);
+  }
+
+  .hero__wall--mint {
+    left: var(--split);
+    background-color: var(--mint);
+  }
+
+  .hero__corner {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--split) - 40px);
+    width: 80px;
+    z-index: -1;
+    background: linear-gradient(90deg, transparent, rgb(0 0 0 / 0.14) 50%, rgb(255 255 255 / 0.08) 50%, transparent);
+    pointer-events: none;
+  }
+
+  .hero__ceiling {
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .hero__ceiling :global(.fringe) {
+    position: relative;
+    margin-top: 58px;
+  }
+
+  .hero__ceiling :global(.lights) {
+    top: 30px;
+    z-index: 2;
+  }
+
+  .hero :global(.hero__macaw) {
+    position: absolute;
+    left: -3vw;
+    bottom: -2vh;
+    width: clamp(220px, 27vw, 430px);
+    z-index: -1;
+    transform: rotate(4deg);
+  }
+
+  :global(.leaf) {
+    color: var(--leaf);
+  }
+
+  .hero :global(.hero__leaf) {
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+    transform-origin: 50% 100%;
+    animation: leaf-sway 7s ease-in-out infinite alternate;
+  }
+
+  .hero :global(.hero__leaf--a) {
+    width: clamp(160px, 18vw, 300px);
+    left: 31%;
+    bottom: -40px;
+    color: #156b33;
+    --r: 18deg;
+  }
+
+  .hero :global(.hero__leaf--b) {
+    width: clamp(200px, 24vw, 380px);
+    right: -6vw;
+    bottom: -60px;
+    color: #1f8a43;
+    --r: -24deg;
+    animation-duration: 9s;
+  }
+
+  .hero :global(.hero__leaf--c) {
+    width: clamp(120px, 12vw, 200px);
+    left: 44%;
+    bottom: -30px;
+    color: #2b9d4f;
+    --r: -10deg;
+    animation-delay: -3s;
+  }
+
+  @keyframes leaf-sway {
+    from {
+      transform: rotate(var(--r, 0deg));
+    }
+    to {
+      transform: rotate(calc(var(--r, 0deg) + 5deg));
+    }
+  }
+
+  /* pothos hanging from the ceiling on the mint wall */
+  .hero__vine {
+    position: absolute;
+    top: 150px;
+    right: clamp(20px, 6vw, 90px);
+    width: 4px;
+    height: clamp(180px, 30vh, 320px);
+    background: #2a5a2a;
+    border-radius: 4px;
+    transform-origin: 50% 0;
+    animation: vine 6s ease-in-out infinite alternate;
+    z-index: 0;
+  }
+
+  .hero :global(.hero__vine-leaf) {
+    position: absolute;
+    width: 46px;
+    max-width: none;
+    color: #3aa65a;
+    top: calc(var(--i) * 17%);
+    left: -21px;
+    transform: rotate(calc(var(--i) * 70deg - 120deg)) translateY(-40%);
+    transform-origin: 50% 100%;
+  }
+
+  @keyframes vine {
+    from {
+      transform: rotate(-2.5deg);
+    }
+    to {
+      transform: rotate(2.5deg);
+    }
+  }
+
+  /* ---- content ---- */
+  .hero__slot {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: var(--split) 1fr;
+    align-items: center;
+    width: 100%;
+  }
+
+  .hero__slot[hidden] {
+    display: none;
+  }
+
+  .hero__poster-col {
+    display: grid;
+    place-items: center;
+    padding: 0 clamp(24px, 5vw, 80px);
+  }
+
+  .hero__poster {
+    position: relative;
+    margin: 0;
+    width: min(100%, 520px);
+    transform: perspective(900px) rotateX(var(--tx, 0deg)) rotateY(var(--ty, 0deg)) rotate(-2.5deg);
+    transform-style: preserve-3d;
+    transition: transform 0.6s var(--ease-out);
+    filter: drop-shadow(0 30px 40px rgb(60 0 30 / 0.45)) drop-shadow(0 4px 6px rgb(0 0 0 / 0.25));
+  }
+
+  .hero__poster:global(.is-tilting) {
+    transition-duration: 0.12s;
+  }
+
+  .hero__poster img {
+    width: 100%;
+    max-height: 66vh;
+    object-fit: contain;
+    background: var(--paper);
+  }
+
+  .hero__shine {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle at var(--sx, 30%) var(--sy, 20%), rgb(255 255 255 / 0.32), transparent 45%);
+    mix-blend-mode: soft-light;
+    opacity: var(--shine, 0);
+    transition: opacity 0.3s;
+  }
+
+  .hero__info {
+    padding: 0 var(--gutter) 0 clamp(28px, 5vw, 80px);
+    max-width: 680px;
+    color: var(--ink);
+  }
+
+  .hero__tag {
+    display: inline-block;
+    margin: 0 0 12px;
+    padding: 4px 14px 6px;
+    background: var(--ink);
+    color: var(--sun);
+    font-size: 1.15rem;
+    transform: rotate(-3deg);
+    border-radius: 3px;
+  }
+
+  .hero__when {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 14px;
+    margin: 0 0 10px;
+  }
+
+  .hero__when time {
+    display: inline-flex;
+    gap: 10px;
+    font-weight: 700;
+    font-size: clamp(1.4rem, 2.6vw, 2.2rem);
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  .hero__day {
+    color: var(--magenta-deep);
+  }
+
+  .hero__rel {
+    font-size: 0.85rem;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1.5px solid var(--ink);
+  }
+
+  .hero__artist {
+    font-size: clamp(3.2rem, 8.4vw, 8.6rem);
+    font-variation-settings: 'wdth' 75;
+    line-height: 0.84;
+    letter-spacing: -0.035em;
+    margin: 0 0 8px;
+    overflow-wrap: anywhere;
+  }
+
+  .hero__artist a {
+    text-decoration: none;
+  }
+
+  .hero__artist a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 0.06em;
+    text-underline-offset: 0.06em;
+  }
+
+  .hero__title {
+    font-size: clamp(1.3rem, 2.3vw, 2rem);
+    font-weight: 300;
+    font-style: italic;
+    margin: 0 0 6px;
+  }
+
+  .hero__genre,
+  .hero__lineup {
+    font-size: 0.85rem;
+    margin: 0 0 4px;
+  }
+
+  .hero__summary {
+    margin: 18px 0 20px;
+    font-size: clamp(1rem, 1.3vw, 1.18rem);
+    max-width: 52ch;
+  }
+
+  .stub {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0 0 22px;
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    box-shadow: 5px 5px 0 var(--ink);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    max-width: 520px;
+    transform: rotate(0.6deg);
+  }
+
+  .stub > div {
+    padding: 10px 14px;
+    border-bottom: 1.5px dashed rgb(21 16 26 / 0.35);
+  }
+
+  .stub > div:not(.stub__wide):nth-child(odd) {
+    border-right: 1.5px dashed rgb(21 16 26 / 0.35);
+  }
+
+  .stub > div:last-child {
+    border-bottom: 0;
+  }
+
+  .stub__wide {
+    grid-column: 1 / -1;
+  }
+
+  .stub dt {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0.65;
+  }
+
+  .stub dd {
+    margin: 0;
+    font-weight: 700;
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .hero__rsvp {
+    margin: 0;
+    font-size: 0.9rem;
+    align-self: center;
+  }
+
+  .hero__empty {
+    grid-template-columns: 1fr;
+    justify-items: end;
+  }
+
+  .hero__empty .hero__info {
+    width: calc(100% - var(--split));
+  }
+
+  /* ---- tablets & phones: walls stack, poster on pink, info on mint ---- */
+  @media (max-width: 959px) {
+    .hero {
+      --split: 100%;
+      padding-top: calc(clamp(90px, 15vh, 140px) + 30px);
+      padding-bottom: 0;
+    }
+
+    .hero__wall--pink {
+      right: 0;
+    }
+
+    .hero__wall--mint {
+      display: none;
+    }
+
+    .hero__corner {
+      display: none;
+    }
+
+    .hero__slot {
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+
+    .hero__poster-col {
+      padding: 0 var(--gutter);
+    }
+
+    .hero__poster {
+      width: min(82vw, 440px);
+    }
+
+    .hero__poster:global(.is-tilting) {
+    transition-duration: 0.12s;
+  }
+
+  .hero__poster img {
+      max-height: 58vh;
+    }
+
+    .hero__info {
+      padding: 12px var(--gutter) 110px;
+      background-color: var(--mint);
+      background-image: var(--grain);
+      background-size: 220px;
+      background-blend-mode: multiply;
+      max-width: none;
+    }
+
+    .hero :global(.hero__macaw) {
+      width: 46vw;
+      top: 42%;
+      bottom: auto;
+      left: -10vw;
+    }
+
+    .hero :global(.hero__leaf--a),
+    .hero :global(.hero__leaf--c) {
+      display: none;
+    }
+
+    .hero__vine {
+      top: 120px;
+      height: 180px;
+    }
+
+    .hero__empty .hero__info {
+      width: 100%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero :global(.hero__leaf),
+    .hero__vine {
+      animation: none;
+    }
+  }
+</style>
