@@ -293,6 +293,9 @@ Performance:
 - The inside of the house is plain HTML/CSS with about 4 KB of JavaScript.
 - three.js (≈150 KB gzipped) is loaded **only** when the street intro is shown, and released when
   you go inside.
+- The street scene paints all its textures in code (no image files) and adapts to the device: if the
+  frame rate drops it lowers the resolution step by step (and hides the grass, then the shadows).
+  Shadows are only redrawn when the sun or the door moves.
 - Images are responsive WebP, lazy-loaded below the fold.
 - Fonts are self-hosted (no requests to Google).
 

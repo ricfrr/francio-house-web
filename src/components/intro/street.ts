@@ -6,24 +6,34 @@
  */
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { bark, lawn, leafTuft, needleTuft, paving, plaster, roofTiles, setAnisotropy, wood } from './textures';
+import { foliage, grass, hills, type Clump } from './nature';
+import { rng } from './noise';
 
 // ---- house dimensions (metres) ----
-const W = 12; // x
+const W = 11; // x
 const D = 9; // z
-const FLOOR = 3.2; // first-floor level
-const HEIGHT = 6.6;
+const FLOOR = 3.8; // first-floor level
+const HEIGHT = 7.3;
 const WALL = 0.3;
 
+// The real stairs are an L: a short flight along the front of the house, a corner landing, then a long
+// flight up the side wall to a terrace. The door is at the start of the terrace, which carries on behind it.
+const STEPS_LOW = 5;
 const STEPS = 18;
+const STEPS_UP = STEPS - STEPS_LOW;
 const TREAD = 0.3;
 const RISER = FLOOR / STEPS;
+const LANDING_H = STEPS_LOW * RISER;
 const STAIR_X0 = -W / 2 - 1.5;
 const STAIR_X1 = -W / 2;
 const STAIR_XC = (STAIR_X0 + STAIR_X1) / 2;
-const STAIR_Z_BOTTOM = 3.4;
-const STAIR_Z_TOP = STAIR_Z_BOTTOM - STEPS * TREAD;
-const LANDING_Z_END = STAIR_Z_TOP - 1.6;
-const DOOR_Z = (STAIR_Z_TOP + LANDING_Z_END) / 2;
+const FRONT_Z0 = D / 2; // the lower flight and the landing sit against the front wall
+const FRONT_Z1 = FRONT_Z0 + 1.5;
+const FRONT_ZC = (FRONT_Z0 + FRONT_Z1) / 2;
+const TOP_Z = FRONT_Z0 - STEPS_UP * TREAD; // where the last step meets the terrace
+const TERRACE_END = -D / 2; // the terrace runs the whole length of the side wall, to the back corner of the building
+const DOOR_Z = TOP_Z - 0.9;
 const DOOR_W = 1.1;
 const DOOR_H = 2.3;
 
@@ -31,10 +41,16 @@ const DOOR_H = 2.3;
 type Key = { t: number; pos: [number, number, number]; look: [number, number, number] };
 const EYE = 1.62;
 const KEYS: Key[] = [
-  { t: 0.0, pos: [5, 1.7, 25], look: [-0.8, 3.5, 0] },
-  { t: 0.2, pos: [-1.2, 1.7, 14.5], look: [-4.8, 3.0, 0] },
-  { t: 0.36, pos: [STAIR_XC, EYE, 7.2], look: [STAIR_XC, 2.6, -2] },
-  { t: 0.58, pos: [STAIR_XC, FLOOR - RISER * 2 + EYE, STAIR_Z_TOP + 0.5], look: [STAIR_XC - 0.3, FLOOR + 1.6, -6] },
+  { t: 0.0, pos: [6, 1.7, 26], look: [-0.5, 4.5, 0] },
+  { t: 0.2, pos: [-1.2, 1.7, 14.5], look: [-4.8, 3.6, 0] },
+  // up the short flight along the front...
+  { t: 0.34, pos: [-2.2, EYE, 8.4], look: [-5.4, 1.9, FRONT_ZC] },
+  { t: 0.42, pos: [-4.6, 0.35 + EYE, FRONT_ZC], look: [-7.5, 2.5, FRONT_ZC - 1.0] },
+  // ...round the corner landing, up the long flight...
+  { t: 0.47, pos: [STAIR_XC, LANDING_H + EYE, FRONT_ZC - 0.1], look: [STAIR_XC - 0.1, LANDING_H + 2.4, 1.2] },
+  { t: 0.53, pos: [STAIR_XC, LANDING_H + RISER * 6 + EYE, 2.8], look: [STAIR_XC - 0.1, FLOOR + 1.2, -2.5] },
+  // ...and onto the terrace, facing the door
+  { t: 0.58, pos: [STAIR_XC, FLOOR + EYE - 0.1, TOP_Z + 0.2], look: [STAIR_XC + 0.2, FLOOR + 1.4, DOOR_Z - 2.4] },
   { t: 0.7, pos: [-10.2, FLOOR + 1.45, DOOR_Z], look: [-6, FLOOR + 1.15, DOOR_Z] },
   { t: 0.84, pos: [-7.25, FLOOR + 1.3, DOOR_Z], look: [-6, FLOOR + 1.2, DOOR_Z] },
   { t: 1.0, pos: [-5.35, FLOOR + 1.2, DOOR_Z], look: [2, FLOOR + 1.2, DOOR_Z] },
@@ -49,23 +65,51 @@ const smooth = (a: number, b: number, x: number) => {
 };
 
 // ---- small procedural textures ----
-function plasterTexture() {
-  const c = document.createElement('canvas');
-  c.width = c.height = 256;
-  const x = c.getContext('2d')!;
-  x.fillStyle = '#fff';
-  x.fillRect(0, 0, 256, 256);
-  const img = x.getImageData(0, 0, 256, 256);
-  for (let i = 0; i < img.data.length; i += 4) {
-    const n = 236 + Math.random() * 19;
-    img.data[i] = img.data[i + 1] = img.data[i + 2] = n;
+/** One texture tile covers this many metres of wall. */
+const TEX_M = 2.4;
+
+function scaleUV(g: THREE.BufferGeometry, su: number, sv: number) {
+  const uv = g.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * su, uv.getY(i) * sv);
+}
+
+/** Boxes get texture coordinates in metres, so plaster has the same grain on every wall. */
+function boxUV(g: THREE.BoxGeometry, sx: number, sy: number, sz: number) {
+  const dims = [[sz, sy], [sz, sy], [sx, sz], [sx, sz], [sx, sy], [sx, sy]];
+  const uv = g.attributes.uv;
+  for (let f = 0; f < 6; f++) {
+    for (let k = 0; k < 4; k++) {
+      const i = f * 4 + k;
+      uv.setXY(i, (uv.getX(i) * dims[f][0]) / TEX_M, (uv.getY(i) * dims[f][1]) / TEX_M);
+    }
   }
-  x.putImageData(img, 0, 0);
-  const t = new THREE.CanvasTexture(c);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(3, 3);
-  t.colorSpace = THREE.SRGBColorSpace;
-  return t;
+}
+
+/** Dirt near the ground, shade under the eaves and rain streaks: makes plain white look lived in. */
+function weather(m: THREE.MeshStandardMaterial) {
+  m.onBeforeCompile = (sh) => {
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vWp;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    sh.fragmentShader = sh.fragmentShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+        varying vec3 vWp;
+        float h21(vec2 p) { p = fract(p * vec2(233.34, 851.73)); p += dot(p, p + 23.45); return fract(p.x * p.y); }
+        float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+          return mix(mix(h21(i), h21(i + vec2(1, 0)), f.x), mix(h21(i + vec2(0, 1)), h21(i + vec2(1, 1)), f.x), f.y); }`,
+      )
+      .replace(
+        '#include <color_fragment>',
+        `#include <color_fragment>
+        float up = smoothstep(0.0, 1.5, vWp.y);
+        float eave = smoothstep(${(HEIGHT - 0.9).toFixed(2)}, ${HEIGHT.toFixed(2)}, vWp.y) * (1.0 - smoothstep(${(HEIGHT + 0.1).toFixed(2)}, ${(HEIGHT + 0.4).toFixed(2)}, vWp.y));
+        float streak = vn(vec2((vWp.x + vWp.z) * 7.0, vWp.y * 0.35));
+        float wet = smoothstep(0.55, 0.95, streak) * 0.06 * (1.0 - eave);
+        diffuseColor.rgb *= mix(0.72, 1.0, up) * (1.0 - 0.12 * eave) * (1.0 - wet);`,
+      );
+  };
 }
 
 function stickerTexture() {
@@ -104,7 +148,9 @@ class Batch {
     this.parts.get(key)!.push(g);
   }
   box(key: string, sx: number, sy: number, sz: number, x: number, y: number, z: number, rot?: THREE.Euler, parent?: THREE.Matrix4) {
-    this.add(key, new THREE.BoxGeometry(sx, sy, sz), { x, y, z }, rot, parent);
+    const g = new THREE.BoxGeometry(sx, sy, sz);
+    boxUV(g, sx, sy, sz);
+    this.add(key, g, { x, y, z }, rot, parent);
   }
   build(materials: Record<string, THREE.Material>, scene: THREE.Object3D, noShadow: string[] = []) {
     for (const [key, geos] of this.parts) {
@@ -134,6 +180,7 @@ export interface Street {
 }
 
 export function createStreet(canvas: HTMLCanvasElement): Street {
+  const t0 = performance.now();
   const small = Math.min(window.innerWidth, window.innerHeight) < 700;
   const renderer = new THREE.WebGLRenderer({
     canvas,
@@ -144,23 +191,43 @@ export function createStreet(canvas: HTMLCanvasElement): Street {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, small ? 2 : 1.6));
   renderer.setClearColor(0x000000, 0);
   renderer.toneMapping = THREE.NeutralToneMapping;
-  renderer.toneMappingExposure = 1.0;
+  renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = true;
+  renderer.shadowMap.autoUpdate = false; // redrawn only when the sun or the door moves
   renderer.shadowMap.type = THREE.PCFShadowMap;
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(40, 1, 0.05, 900);
 
-  // ---- sky ----
+  // ---- sky: deep blue like in the photos, with a few thin clouds ----
+  const timeU = { value: 0 };
   const sky = {
     top: new THREE.Color(),
     horizon: new THREE.Color(),
-    ground: new THREE.Color('#d9d3c4'),
+    ground: new THREE.Color('#a59e86'),
     sunDir: new THREE.Vector3(),
     sunColor: new THREE.Color(),
+    cloudLit: new THREE.Color(),
+    cloudShade: new THREE.Color(),
+    cover: { value: 0.66 },
   };
-  const DAY = { top: new THREE.Color('#1b5fe0'), horizon: new THREE.Color('#9fd0ff'), sun: new THREE.Color('#fff3df') };
-  const DUSK = { top: new THREE.Color('#18205e'), horizon: new THREE.Color('#ff9a6b'), sun: new THREE.Color('#ffb070') };
+  const DAY = {
+    top: new THREE.Color('#0a2f9b'), horizon: new THREE.Color('#86b6ee'), sun: new THREE.Color('#fff6e6'),
+    lit: new THREE.Color('#ffffff'), shade: new THREE.Color('#9db4d6'),
+  };
+  const DUSK = {
+    top: new THREE.Color('#18205e'), horizon: new THREE.Color('#ff9a6b'), sun: new THREE.Color('#ffb070'),
+    lit: new THREE.Color('#ffb48a'), shade: new THREE.Color('#4a3f6e'),
+  };
+  const SUN_DAY = new THREE.Vector3(9, 24, 26);
+  const SUN_DUSK = new THREE.Vector3(30, 7, 6);
+  // start from the daytime look: the baked reflections below come from it
+  sky.top.copy(DAY.top);
+  sky.horizon.copy(DAY.horizon);
+  sky.sunColor.copy(DAY.sun);
+  sky.cloudLit.copy(DAY.lit);
+  sky.cloudShade.copy(DAY.shade);
+  sky.sunDir.copy(SUN_DAY).normalize();
   const skyMat = new THREE.ShaderMaterial({
     side: THREE.BackSide,
     depthWrite: false,
@@ -172,6 +239,10 @@ export function createStreet(canvas: HTMLCanvasElement): Street {
       ground: { value: sky.ground },
       sunDir: { value: sky.sunDir },
       sunColor: { value: sky.sunColor },
+      cloudLit: { value: sky.cloudLit },
+      cloudShade: { value: sky.cloudShade },
+      uCover: sky.cover,
+      uTime: timeU,
     },
     vertexShader: /* glsl */ `
       varying vec3 vDir;
@@ -182,15 +253,37 @@ export function createStreet(canvas: HTMLCanvasElement): Street {
     fragmentShader: /* glsl */ `
       uniform vec3 top; uniform vec3 horizon; uniform vec3 ground;
       uniform vec3 sunDir; uniform vec3 sunColor;
+      uniform vec3 cloudLit; uniform vec3 cloudShade; uniform float uCover; uniform float uTime;
       varying vec3 vDir;
+      float h21(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+      float vn(vec2 p) {
+        vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(h21(i), h21(i + vec2(1.0, 0.0)), f.x), mix(h21(i + vec2(0.0, 1.0)), h21(i + vec2(1.0, 1.0)), f.x), f.y);
+      }
+      float fbm(vec2 p) {
+        float s = 0.0, a = 0.5;
+        for (int i = 0; i < 4; i++) { s += a * vn(p); p = p * 2.03 + vec2(7.1, 3.7); a *= 0.5; }
+        return s;
+      }
       void main() {
         vec3 d = normalize(vDir);
         float h = d.y;
         vec3 c = h > 0.0
-          ? mix(horizon, top, pow(smoothstep(0.0, 0.55, h), 0.65))
+          ? mix(horizon, top, pow(smoothstep(0.0, 0.6, h), 0.55))
           : mix(horizon, ground, smoothstep(0.0, 0.08, -h));
-        float s = max(dot(d, normalize(sunDir)), 0.0);
-        c += sunColor * (pow(s, 80.0) * 0.7 + pow(s, 6.0) * 0.12);
+        vec3 sd = normalize(sunDir);
+        float s = max(dot(d, sd), 0.0);
+        c += sunColor * (pow(s, 200.0) * 1.2 + pow(s, 12.0) * 0.18 + pow(s, 3.0) * 0.05);
+        if (h > 0.0) {
+          vec2 cp = d.xz / (h + 0.14) * 0.85 + vec2(uTime * 0.006, uTime * 0.002);
+          float n = fbm(cp);
+          float cloud = smoothstep(uCover, uCover + 0.2, n);
+          float n2 = fbm(cp + normalize(sd.xz + 0.001) * 0.1);
+          float lit = clamp((n - n2) * 3.5 + 0.6, 0.0, 1.0);
+          vec3 cc = mix(cloudShade, cloudLit, lit);
+          cloud *= smoothstep(0.0, 0.22, h);
+          c = mix(c, cc, cloud * 0.9);
+        }
         gl_FragColor = vec4(c, 1.0);
         #include <colorspace_fragment>
       }`,
@@ -198,28 +291,45 @@ export function createStreet(canvas: HTMLCanvasElement): Street {
   const skyDome = new THREE.Mesh(new THREE.SphereGeometry(500, 32, 16), skyMat);
   skyDome.renderOrder = -1;
   scene.add(skyDome);
-  scene.fog = new THREE.Fog(DAY.horizon.clone(), 50, 190);
+  scene.fog = new THREE.Fog(DAY.horizon.clone(), 45, 200);
 
-  // ---- light ----
-  const hemi = new THREE.HemisphereLight('#d6e6ff', '#c2b393', 1.4);
+  // hills on the horizon, hazier the further they are
+  const { group: hillGroup, layers: hillLayers } = hills();
+  scene.add(hillGroup);
+  const HILL_DAY = ['#5d6b45', '#76876b', '#93a58f'].map((c) => new THREE.Color(c));
+  const HILL_DUSK = ['#2d2a45', '#3d3a5c', '#524d70'].map((c) => new THREE.Color(c));
+  const HILL_HAZE = [0.58, 0.38, 0.18];
+
+  // reflections (windows) and soft ambient light come from this same sky, baked once
+  {
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const envScene = new THREE.Scene();
+    const envGeo = new THREE.SphereGeometry(500, 24, 12);
+    envScene.add(new THREE.Mesh(envGeo, skyMat));
+    scene.environment = pmrem.fromScene(envScene, 0.03).texture;
+    pmrem.dispose();
+    envGeo.dispose();
+  }
+
+  // ---- light: strong clean sun, bluish shade ----
+  const hemi = new THREE.HemisphereLight('#cfe0ff', '#c9b995', 0.5);
   scene.add(hemi);
-  const sun = new THREE.DirectionalLight('#fff3df', 2.7);
+  const sun = new THREE.DirectionalLight('#fff3df', 3.4);
   sun.castShadow = true;
   sun.shadow.mapSize.set(small ? 1024 : 2048, small ? 1024 : 2048);
   Object.assign(sun.shadow.camera, { left: -18, right: 18, top: 18, bottom: -18, near: 1, far: 90 });
   sun.shadow.bias = -0.0004;
   sun.shadow.normalBias = 0.03;
+  sun.shadow.radius = 2.5;
   scene.add(sun, sun.target);
-  const SUN_DAY = new THREE.Vector3(9, 24, 26);
-  const SUN_DUSK = new THREE.Vector3(30, 7, 6);
 
   // Colourful light that pours out when the door opens.
   const spillA = new THREE.PointLight('#ff2f8c', 0, 9, 1.6);
-  spillA.position.set(-5.3, FLOOR + 1.5, DOOR_Z);
+  spillA.position.set(-W / 2 + 0.7, FLOOR + 1.5, DOOR_Z);
   const spillB = new THREE.PointLight('#36e08f', 0, 7, 1.6);
-  spillB.position.set(-5.4, FLOOR + 0.4, DOOR_Z - 0.3);
+  spillB.position.set(-W / 2 + 0.6, FLOOR + 0.4, DOOR_Z - 0.3);
   const gapLight = new THREE.PointLight('#ff2f8c', 0, 2.5, 2);
-  gapLight.position.set(-6.25, FLOOR + 0.08, DOOR_Z);
+  gapLight.position.set(-W / 2 - 0.25, FLOOR + 0.08, DOOR_Z);
   scene.add(spillA, spillB, gapLight);
   // porch lamp by the door, switches on at dusk
   const porch = new THREE.PointLight('#ffc27a', 0, 7, 1.4);
@@ -227,24 +337,35 @@ export function createStreet(canvas: HTMLCanvasElement): Street {
   scene.add(porch);
 
   // ---- materials ----
-  const plaster = plasterTexture();
+  setAnisotropy(Math.min(8, renderer.capabilities.getMaxAnisotropy()));
+  const plasterTex = plaster();
+  const roofMap = roofTiles();
+  roofMap.repeat.set(17, 1.2);
+  const paveTex = paving();
+  const lawnTex = lawn();
+  lawnTex.repeat.set(210, 210);
+  const barkTex = bark();
+  barkTex.repeat.set(1, 3);
+  const woodTex = wood();
+  const wallMat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.92, map: plasterTex.map, bumpMap: plasterTex.bump, bumpScale: 0.3 });
+  weather(wallMat);
   const mats: Record<string, THREE.Material> = {
-    wall: new THREE.MeshStandardMaterial({ color: '#f3f0ea', roughness: 0.94, map: plaster }),
-    trim: new THREE.MeshStandardMaterial({ color: '#5b3a2a', roughness: 0.75 }),
-    roof: new THREE.MeshStandardMaterial({ color: '#8a5a43', roughness: 0.9 }),
-    rail: new THREE.MeshStandardMaterial({ color: '#f6f6f2', roughness: 0.45, metalness: 0.15 }),
-    frame: new THREE.MeshStandardMaterial({ color: '#f7f6f2', roughness: 0.5 }),
-    glass: new THREE.MeshStandardMaterial({ color: '#33414f', roughness: 0.22, metalness: 0.1, emissive: '#0b1420' }),
-    shutter: new THREE.MeshStandardMaterial({ color: '#d9d6cf', roughness: 0.7 }),
-    iron: new THREE.MeshStandardMaterial({ color: '#2a2b2e', roughness: 0.6, metalness: 0.4 }),
-    step: new THREE.MeshStandardMaterial({ color: '#c8c4bb', roughness: 0.95 }),
-    paving: new THREE.MeshStandardMaterial({ color: '#cbc5ba', roughness: 1 }),
-    grass: new THREE.MeshStandardMaterial({ color: '#a8a27f', roughness: 1 }),
-    leaf: new THREE.MeshStandardMaterial({ color: '#3f5f31', roughness: 0.9, flatShading: true }),
-    leafLight: new THREE.MeshStandardMaterial({ color: '#6c8a3f', roughness: 0.9, flatShading: true }),
-    bark: new THREE.MeshStandardMaterial({ color: '#5a4436', roughness: 1 }),
+    wall: wallMat,
+    trim: new THREE.MeshStandardMaterial({ color: '#4a2c20', roughness: 0.7 }),
+    roof: new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.85, map: roofMap, bumpMap: roofMap, bumpScale: 1.2 }),
+    rail: new THREE.MeshStandardMaterial({ color: '#f7f7f4', roughness: 0.4, metalness: 0.2 }),
+    frame: new THREE.MeshStandardMaterial({ color: '#f7f6f2', roughness: 0.45 }),
+    glass: new THREE.MeshStandardMaterial({ color: '#7189a6', roughness: 0.06, metalness: 0.78 }),
+    shutter: new THREE.MeshStandardMaterial({ color: '#e4e2dc', roughness: 0.7 }),
+    iron: new THREE.MeshStandardMaterial({ color: '#17181b', roughness: 0.45, metalness: 0.6 }),
+    step: new THREE.MeshStandardMaterial({ color: '#dcd8cf', roughness: 0.95, map: paveTex }),
+    paving: new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.95, map: paveTex }),
+    grass: new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, map: lawnTex }),
+    bark: new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, map: barkTex }),
     pot: new THREE.MeshStandardMaterial({ color: '#b5643d', roughness: 0.9 }),
-    neighbour: new THREE.MeshStandardMaterial({ color: '#e7c25d', roughness: 0.95 }),
+    agave: new THREE.MeshStandardMaterial({ color: '#7f9a86', roughness: 0.65 }),
+    mat: new THREE.MeshStandardMaterial({ color: '#8a6e48', roughness: 1 }),
+    neighbour: new THREE.MeshStandardMaterial({ color: '#ecc96a', roughness: 0.95, map: plasterTex.map, bumpMap: plasterTex.bump, bumpScale: 0.7 }),
     wire: new THREE.MeshBasicMaterial({ color: '#2b2b2b' }),
   };
 
@@ -255,8 +376,14 @@ export function createStreet(canvas: HTMLCanvasElement): Street {
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
   scene.add(ground);
-  b.add('paving', new THREE.PlaneGeometry(22, 24).rotateX(-Math.PI / 2), { x: -1, y: 0.01, z: 2 });
-  b.add('paving', new THREE.PlaneGeometry(4, 18).rotateX(-Math.PI / 2), { x: -5, y: 0.012, z: 20 });
+  {
+    const slabs = new THREE.PlaneGeometry(22, 24).rotateX(-Math.PI / 2);
+    scaleUV(slabs, 22 / TEX_M, 24 / TEX_M);
+    b.add('paving', slabs, { x: -1, y: 0.01, z: 2 });
+    const path = new THREE.PlaneGeometry(4, 18).rotateX(-Math.PI / 2);
+    scaleUV(path, 4 / TEX_M, 18 / TEX_M);
+    b.add('paving', path, { x: -5, y: 0.012, z: 20 });
+  }
 
   // ---- walls ----
   b.box('wall', W, HEIGHT, WALL, 0, HEIGHT / 2, D / 2 - WALL / 2); // front
@@ -279,6 +406,7 @@ export function createStreet(canvas: HTMLCanvasElement): Street {
     hole.closePath();
     s.holes.push(hole);
     const g = new THREE.ExtrudeGeometry(s, { depth: WALL, bevelEnabled: false });
+    scaleUV(g, 1 / TEX_M, 1 / TEX_M);
     g.rotateY(Math.PI / 2);
     b.add('wall', g, { x: -W / 2, y: 0, z: 0 });
   }
@@ -288,20 +416,23 @@ export function createStreet(canvas: HTMLCanvasElement): Street {
   b.box('wall', W + 0.08, 0.14, 0.06, 0, bandY, -D / 2 - 0.03);
   b.box('wall', 0.06, 0.14, D, W / 2 + 0.03, bandY, 0);
 
-  // ---- roof: low hip roof with a brown fascia ----
-  const OVER = 0.65;
-  b.box('trim', W + OVER * 2, 0.26, D + OVER * 2, 0, HEIGHT + 0.13, 0);
-  b.box('wall', W + OVER * 2 - 0.1, 0.04, D + OVER * 2 - 0.1, 0, HEIGHT - 0.02, 0);
+  // ---- roof: very low hip roof, thin dark-brown fascia, a white cable under the eaves ----
+  const OVER = 0.6;
+  b.box('trim', W + OVER * 2, 0.22, D + OVER * 2, 0, HEIGHT + 0.11, 0);
+  b.box('wall', W + OVER * 2 - 0.12, 0.04, D + OVER * 2 - 0.12, 0, HEIGHT - 0.02, 0);
   {
     const roof = new THREE.ConeGeometry(1, 1, 4, 1, false, Math.PI / 4);
-    roof.scale((W + OVER * 2) / Math.SQRT2, 1.25, (D + OVER * 2) / Math.SQRT2);
-    b.add('roof', roof, { x: 0, y: HEIGHT + 0.26 + 0.62, z: 0 });
+    roof.scale((W + OVER * 2) / Math.SQRT2, 0.9, (D + OVER * 2) / Math.SQRT2);
+    b.add('roof', roof, { x: 0, y: HEIGHT + 0.22 + 0.45, z: 0 });
   }
-  // chimney
-  b.box('wall', 0.7, 1.5, 0.7, 2.6, HEIGHT + 1.32, -1.2);
-  b.box('wall', 0.95, 0.12, 0.95, 2.6, HEIGHT + 2.18, -1.2);
-  b.box('wall', 0.55, 0.32, 0.55, 2.6, HEIGHT + 2.4, -1.2);
-  b.box('trim', 0.8, 0.06, 0.8, 2.6, HEIGHT + 2.59, -1.2);
+  // the cable that runs along the front eave and down the right corner
+  b.box('rail', W + OVER * 2 - 0.3, 0.03, 0.03, 0, HEIGHT - 0.12, D / 2 + OVER - 0.18);
+  b.box('rail', 0.03, 0.03, D + OVER * 2 - 0.3, -W / 2 - OVER + 0.18, HEIGHT - 0.12, 0);
+  b.box('rail', 0.03, HEIGHT - 0.2, 0.03, W / 2 + 0.05, (HEIGHT - 0.2) / 2 + 0.1, D / 2 + 0.05);
+  // chimney: white, tall, with a wider cap, set back from the front
+  b.box('wall', 0.75, 2.0, 0.75, -0.9, HEIGHT + 1.15, -1.8);
+  b.box('wall', 1.0, 0.12, 1.0, -0.9, HEIGHT + 2.2, -1.8);
+  b.box('frame', 0.55, 0.08, 0.55, -0.9, HEIGHT + 2.3, -1.8);
 
   // ---- windows ----
   type Face = 'front' | 'back' | 'left' | 'right';
@@ -317,21 +448,27 @@ export function createStreet(canvas: HTMLCanvasElement): Street {
   };
   function windowAt(face: Face, u: number, y: number, w: number, h: number, kind: 'plain' | 'grid' | 'grill' | 'shutter' = 'plain') {
     const m = faceMatrix(face, u);
-    const f = 0.09;
+    const dark = kind === 'grid' || kind === 'grill';
+    const fk = dark ? 'iron' : 'frame';
+    const f = dark ? 0.07 : 0.09;
     b.box('glass', w, h, 0.04, 0, y, 0.015, undefined, m);
-    b.box('frame', w + f * 2, f, 0.12, 0, y + h / 2 + f / 2, 0.04, undefined, m);
-    b.box('frame', w + f * 2, f, 0.12, 0, y - h / 2 - f / 2, 0.04, undefined, m);
-    b.box('frame', f, h, 0.12, -w / 2 - f / 2, y, 0.04, undefined, m);
-    b.box('frame', f, h, 0.12, w / 2 + f / 2, y, 0.04, undefined, m);
+    b.box(fk, w + f * 2, f, 0.12, 0, y + h / 2 + f / 2, 0.04, undefined, m);
+    b.box(fk, w + f * 2, f, 0.12, 0, y - h / 2 - f / 2, 0.04, undefined, m);
+    b.box(fk, f, h, 0.12, -w / 2 - f / 2, y, 0.04, undefined, m);
+    b.box(fk, f, h, 0.12, w / 2 + f / 2, y, 0.04, undefined, m);
     b.box('wall', w + 0.34, 0.07, 0.22, 0, y - h / 2 - f - 0.035, 0.09, undefined, m); // sill
     if (kind === 'plain' || kind === 'shutter') b.box('frame', 0.05, h, 0.06, 0, y, 0.04, undefined, m);
     if (kind === 'grid') {
-      for (let i = 1; i < 4; i++) b.box('frame', 0.05, h, 0.06, -w / 2 + (w / 4) * i, y, 0.04, undefined, m);
-      for (let j = 1; j < 3; j++) b.box('frame', w, 0.05, 0.06, 0, y - h / 2 + (h / 3) * j, 0.04, undefined, m);
+      // black steel window: two columns, three rows
+      b.box('iron', 0.05, h, 0.06, 0, y, 0.05, undefined, m);
+      for (let j = 1; j < 3; j++) b.box('iron', w, 0.045, 0.06, 0, y - h / 2 + (h / 3) * j, 0.05, undefined, m);
     }
     if (kind === 'grill') {
-      for (let i = 1; i < 7; i++) b.box('iron', 0.035, h, 0.04, -w / 2 + (w / 7) * i, y, 0.11, undefined, m);
-      b.box('iron', w, 0.04, 0.04, 0, y + h * 0.18, 0.11, undefined, m);
+      // wide black opening with thin vertical bars and a transom
+      for (let i = 1; i < 8; i++) b.box('iron', 0.04, h, 0.05, -w / 2 + (w / 8) * i, y, 0.05, undefined, m);
+      b.box('iron', w, 0.05, 0.06, 0, y + h * 0.22, 0.05, undefined, m);
+      // something stacked inside, as in the photo
+      b.box('shutter', 0.7, 0.5, 0.4, w * 0.1, y - h / 2 + 0.35, -0.25, undefined, m);
     }
     if (kind === 'shutter') {
       // half-lowered roller shutter, slats as thin bands
@@ -339,31 +476,38 @@ export function createStreet(canvas: HTMLCanvasElement): Street {
       for (let i = 0; i < 9; i++) b.box('shutter', w, sh / 9 - 0.012, 0.03, 0, y + h / 2 - (sh / 9) * (i + 0.5), 0.05, undefined, m);
     }
   }
-  // front: french windows on the balcony, big windows downstairs
-  windowAt('front', -3.1, FLOOR + 1.3, 1.15, 2.25, 'shutter');
-  windowAt('front', 3.1, FLOOR + 1.3, 1.15, 2.25, 'shutter');
-  windowAt('front', -3.1, 1.35, 2.3, 2.2, 'grid');
-  windowAt('front', 3.0, 1.4, 2.7, 2.35, 'grill');
-  // left: two windows upstairs, above the stairs
-  windowAt('left', 2.6, FLOOR + 1.55, 0.95, 1.35, 'plain');
-  windowAt('left', 0.2, FLOOR + 1.55, 0.95, 1.35, 'shutter');
+  // front, as in the photos: two narrow french windows above, a black-framed window and a wide black opening below
+  windowAt('front', -2.5, FLOOR + 1.2, 1.15, 2.1, 'plain');
+  windowAt('front', 1.7, FLOOR + 1.2, 1.15, 2.1, 'plain');
+  windowAt('front', -2.9, 2.0, 2.3, 2.3, 'grid');
+  windowAt('front', 1.95, 1.5, 3.9, 2.7, 'grill');
+  // roller-shutter boxes above the lower windows
+  b.box('frame', 2.6, 0.3, 0.14, -2.9, 3.4, D / 2 + 0.07);
+  b.box('frame', 4.2, 0.3, 0.14, 1.95, 3.4, D / 2 + 0.07);
+  // left: windows above the stairs
+  windowAt('left', 3.0, FLOOR + 1.45, 0.95, 1.5, 'plain');
+  windowAt('left', -2.0, FLOOR + 1.45, 0.95, 1.5, 'shutter');
+  windowAt('left', -3.3, FLOOR + 1.45, 0.95, 1.5, 'plain');
   // right and back
-  windowAt('right', 2.2, FLOOR + 1.55, 1.0, 1.4, 'shutter');
-  windowAt('right', -2.2, FLOOR + 1.55, 1.0, 1.4, 'plain');
-  windowAt('right', 2.2, 1.5, 1.0, 1.4, 'plain');
-  windowAt('right', -2.2, 1.5, 1.0, 1.4, 'shutter');
-  windowAt('back', -3, FLOOR + 1.55, 1.0, 1.4, 'plain');
-  windowAt('back', 3, FLOOR + 1.55, 1.0, 1.4, 'plain');
+  windowAt('right', 2.2, FLOOR + 1.45, 1.0, 1.5, 'shutter');
+  windowAt('right', -2.2, FLOOR + 1.45, 1.0, 1.5, 'plain');
+  windowAt('right', 2.2, 1.7, 1.0, 1.5, 'plain');
+  windowAt('right', -2.2, 1.7, 1.0, 1.5, 'shutter');
+  windowAt('back', -3, FLOOR + 1.45, 1.0, 1.5, 'plain');
+  windowAt('back', 3, FLOOR + 1.45, 1.0, 1.5, 'plain');
+  // an outdoor air-conditioning unit on the right wall
+  b.box('frame', 0.3, 0.6, 0.9, W / 2 + 0.18, 5.4, -1.5);
+  b.box('iron', 0.02, 0.44, 0.7, W / 2 + 0.34, 5.4, -1.5);
 
   // ---- railings: white flat bars, horizontal, like the real ones ----
-  const BAR = [0.22, 0.46, 0.7, 0.94];
+  const BAR = [0.14, 0.265, 0.39, 0.515, 0.64, 0.765, 0.89];
   function railLine(x0: number, z0: number, y0: number, x1: number, z1: number, y1: number, posts = true) {
     const dx = x1 - x0, dy = y1 - y0, dz = z1 - z0;
     const len = Math.hypot(dx, dy, dz);
     const yaw = Math.atan2(dx, dz);
     const pitch = -Math.atan2(dy, Math.hypot(dx, dz));
     const rot = new THREE.Euler(pitch, yaw, 0, 'YXZ');
-    for (const h of BAR) b.box('rail', 0.035, 0.07, len, (x0 + x1) / 2, (y0 + y1) / 2 + h, (z0 + z1) / 2, rot);
+    for (const h of BAR) b.box('rail', 0.03, 0.075, len, (x0 + x1) / 2, (y0 + y1) / 2 + h, (z0 + z1) / 2, rot);
     b.box('rail', 0.07, 0.05, len, (x0 + x1) / 2, (y0 + y1) / 2 + 1.0, (z0 + z1) / 2, rot);
     if (!posts) return;
     const n = Math.max(1, Math.round(len / 1.2));
@@ -373,24 +517,45 @@ export function createStreet(canvas: HTMLCanvasElement): Street {
     }
   }
 
-  // ---- stairs ----
-  for (let i = 0; i < STEPS; i++) {
+  // ---- stairs: short flight along the front, corner landing, long flight up the side, long terrace ----
+  // white plastered mass underneath, thin grey concrete treads on top
+  const step = (w: number, h: number, d: number, x: number, z: number) => {
+    b.box('wall', w, h - 0.05, d, x, (h - 0.05) / 2, z);
+    b.box('step', w + 0.03, 0.05, d + 0.03, x, h - 0.025, z);
+  };
+  for (let i = 0; i < STEPS_LOW; i++) {
     const h = (i + 1) * RISER;
-    b.box('step', 1.5, h, TREAD + 0.002, STAIR_XC, h / 2, STAIR_Z_BOTTOM - (i + 0.5) * TREAD);
-    b.box('wall', 1.52, 0.03, 0.04, STAIR_XC, h - 0.015, STAIR_Z_BOTTOM - i * TREAD - 0.01); // nosing
+    const cx = STAIR_X1 + (STEPS_LOW - i - 0.5) * TREAD;
+    step(TREAD + 0.002, h, 1.5, cx, FRONT_ZC);
+    b.box('wall', 0.04, 0.03, 1.52, cx + TREAD / 2 - 0.01, h - 0.015, FRONT_ZC); // nosing
   }
-  b.box('step', 1.5, FLOOR, STAIR_Z_TOP - LANDING_Z_END, STAIR_XC, FLOOR / 2, (STAIR_Z_TOP + LANDING_Z_END) / 2);
-  railLine(STAIR_X0 + 0.04, STAIR_Z_BOTTOM - 0.15, RISER, STAIR_X0 + 0.04, STAIR_Z_TOP, FLOOR);
-  railLine(STAIR_X0 + 0.04, STAIR_Z_TOP, FLOOR, STAIR_X0 + 0.04, LANDING_Z_END + 0.04, FLOOR);
-  railLine(STAIR_X0 + 0.04, LANDING_Z_END + 0.04, FLOOR, STAIR_X1, LANDING_Z_END + 0.04, FLOOR);
+  step(1.5, LANDING_H, 1.5, STAIR_XC, FRONT_ZC);
+  for (let j = 0; j < STEPS_UP; j++) {
+    const h = LANDING_H + (j + 1) * RISER;
+    const cz = FRONT_Z0 - (j + 0.5) * TREAD;
+    step(1.5, h, TREAD + 0.002, STAIR_XC, cz);
+    b.box('wall', 1.52, 0.03, 0.04, STAIR_XC, h - 0.015, cz + TREAD / 2 - 0.01); // nosing
+  }
+  step(1.5, FLOOR, TOP_Z - TERRACE_END, STAIR_XC, (TOP_Z + TERRACE_END) / 2); // the terrace
+  {
+    const rx = STAIR_X0 + 0.04, rz = FRONT_Z1 - 0.04, startX = STAIR_X1 + STEPS_LOW * TREAD;
+    railLine(startX, rz, RISER, STAIR_X1, rz, LANDING_H); // up the short flight
+    railLine(STAIR_X1, rz, LANDING_H, rx, rz, LANDING_H); // round the landing
+    railLine(rx, rz, LANDING_H, rx, FRONT_Z0, LANDING_H);
+    railLine(rx, FRONT_Z0, LANDING_H, rx, TOP_Z, FLOOR); // up the long flight
+    railLine(rx, TOP_Z, FLOOR, rx, TERRACE_END + 0.04, FLOOR); // along the terrace
+    railLine(rx, TERRACE_END + 0.04, FLOOR, STAIR_X1, TERRACE_END + 0.04, FLOOR);
+  }
 
-  // ---- front balcony ----
-  const BAL_D = 1.45;
-  b.box('wall', W + 0.5, 0.24, BAL_D, 0, FLOOR, D / 2 + BAL_D / 2);
-  const by = FLOOR + 0.12;
-  railLine(-W / 2 - 0.2, D / 2 + BAL_D - 0.05, by, W / 2 + 0.2, D / 2 + BAL_D - 0.05, by);
-  railLine(-W / 2 - 0.2, D / 2 + 0.02, by, -W / 2 - 0.2, D / 2 + BAL_D - 0.05, by);
-  railLine(W / 2 + 0.2, D / 2 + 0.02, by, W / 2 + 0.2, D / 2 + BAL_D - 0.05, by);
+  // ---- front balcony: a full-width slab with a thick front edge, as in the photos ----
+  const BAL_D = 1.4;
+  const BAL_W = W + 0.9;
+  b.box('wall', BAL_W, 0.2, BAL_D, 0, FLOOR - 0.02, D / 2 + BAL_D / 2);
+  b.box('wall', BAL_W, 0.3, 0.08, 0, FLOOR - 0.12, D / 2 + BAL_D + 0.02);
+  const by = FLOOR + 0.08;
+  railLine(-BAL_W / 2 + 0.05, D / 2 + BAL_D - 0.05, by, BAL_W / 2 - 0.05, D / 2 + BAL_D - 0.05, by);
+  railLine(-BAL_W / 2 + 0.05, D / 2 + 0.02, by, -BAL_W / 2 + 0.05, D / 2 + BAL_D - 0.05, by);
+  railLine(BAL_W / 2 - 0.05, D / 2 + 0.02, by, BAL_W / 2 - 0.05, D / 2 + BAL_D - 0.05, by);
 
   // ---- door frame ----
   {
@@ -411,16 +576,24 @@ export function createStreet(canvas: HTMLCanvasElement): Street {
   lamp.position.set(-W / 2 - 0.15, FLOOR + DOOR_H + 0.1, DOOR_Z + DOOR_W / 2 + 0.45);
   scene.add(lamp);
 
-  // ---- trees, bushes, a pot, the neighbour, a wire ----
+  // ---- trees, bushes, agave, the neighbour, a wire ----
+  const treeClumps: Clump[] = [];
+  const bushClumps: Clump[] = [];
+  const blobs: [number, number, number][] = []; // soft ground shadows: x, z, radius
   function pine(x: number, z: number, s: number) {
-    const trunkH = 6.5 * s;
-    b.add('bark', new THREE.CylinderGeometry(0.16 * s, 0.26 * s, trunkH, 6), { x, y: trunkH / 2, z }, new THREE.Euler(0.06, 0, -0.05));
-    const r = [[0, 0, 0, 2.6], [1.6, -0.3, 0.6, 1.9], [-1.5, -0.2, -0.4, 2.0], [0.4, 0.4, -1.4, 1.7], [-0.3, 0.2, 1.5, 1.6]];
-    for (const [dx, dy, dz, rr] of r) {
-      const g = new THREE.IcosahedronGeometry(rr * s, 1);
-      g.scale(1.25, 0.42, 1.25);
-      b.add(dx > 0 ? 'leafLight' : 'leaf', g, { x: x + dx * s, y: trunkH + 0.4 * s + dy * s, z: z + dz * s });
+    const trunkH = 6.8 * s;
+    b.add('bark', new THREE.CylinderGeometry(0.15 * s, 0.27 * s, trunkH, 8), { x, y: trunkH / 2, z }, new THREE.Euler(0.05, 0, -0.04));
+    // an umbrella crown: a few flat clumps of needles on branches
+    const cy = trunkH + 0.2 * s;
+    for (let k = 0; k < 5; k++) {
+      const a = k * 2.4 + x * 0.3;
+      const off = k === 0 ? 0 : 1.9 * s;
+      const cx = x + Math.cos(a) * off, cz = z + Math.sin(a) * off;
+      const y = cy + (k === 0 ? 0.55 : -0.5 + (k % 2) * 0.35) * s;
+      treeClumps.push({ x: cx, y, z: cz, rx: 2.2 * s, ry: 0.5 * s, rz: 2.2 * s, count: 62, size: 1.35 * s, tint: new THREE.Color(k % 2 ? '#5d7a3a' : '#4d6e34') });
+      if (k > 0) b.add('bark', new THREE.CylinderGeometry(0.05 * s, 0.09 * s, off * 1.1, 5).translate(0, off * 0.55, 0), { x, y: trunkH * 0.93, z }, new THREE.Euler(Math.sin(a) * 1.1, 0, -Math.cos(a) * 1.1));
     }
+    blobs.push([x, z, 2.2 * s]);
   }
   pine(-15, -11, 1.15);
   pine(13, -15, 1.3);
@@ -428,23 +601,33 @@ export function createStreet(canvas: HTMLCanvasElement): Street {
   pine(24, -4, 1.05);
   pine(-6, -24, 1.4);
   pine(36, 12, 0.9);
-  function bush(x: number, z: number, r: number, key = 'leaf') {
-    const g = new THREE.IcosahedronGeometry(r, 1);
-    g.scale(1.3, 0.8, 1.1);
-    b.add(key, g, { x, y: r * 0.55, z });
+  function bush(x: number, z: number, r: number, tint = '#4a6b2c') {
+    bushClumps.push({ x, y: r * 0.6, z, rx: r * 1.3, ry: r * 0.7, rz: r * 1.05, count: Math.round(46 * r), size: 0.5 + r * 0.25, tint: new THREE.Color(tint) });
+    blobs.push([x, z, r * 1.5]);
   }
-  bush(7.8, 5.5, 0.9, 'leafLight');
-  bush(8.6, 3.8, 0.7);
-  bush(7.2, -4.8, 1.1);
-  bush(-9.4, -5.6, 1.0, 'leafLight');
+  bush(7.4, 5.2, 0.9, '#5d7e33');
+  bush(8.3, 3.6, 0.7);
+  bush(7.0, -4.8, 1.1);
+  bush(-9.4, -5.6, 1.0, '#5d7e33');
   bush(-10.2, 2.4, 0.75);
-  // potted palm at the foot of the stairs
-  b.add('pot', new THREE.CylinderGeometry(0.32, 0.24, 0.55, 10), { x: -5.2, y: 0.28, z: 6.2 });
-  for (let i = 0; i < 7; i++) {
-    const a = (i / 7) * Math.PI * 2;
-    const g = new THREE.ConeGeometry(0.09, 1.2, 4);
-    b.add('leafLight', g, { x: -5.2 + Math.cos(a) * 0.25, y: 1.0, z: 6.2 + Math.sin(a) * 0.25 }, new THREE.Euler(Math.sin(a) * 0.55, 0, -Math.cos(a) * 0.55));
+  // agave by the foot of the stairs, as in the photos
+  function agave(x: number, z: number, scale: number) {
+    for (let i = 0; i < 20; i++) {
+      const t = i / 19;
+      const len = (0.5 + t * 0.6) * scale;
+      const g = new THREE.ConeGeometry(0.075 * scale, len, 5).scale(1, 1, 0.4).translate(0, len / 2, 0);
+      const tilt = 0.2 + t * 1.1;
+      const yaw = i * 2.4;
+      b.add('agave', g, { x, y: 0.12 * scale, z }, new THREE.Euler(Math.sin(yaw) * tilt, 0, -Math.cos(yaw) * tilt));
+    }
+    b.add('pot', new THREE.CylinderGeometry(0.28 * scale, 0.21 * scale, 0.28 * scale, 12), { x, y: 0.0, z });
+    blobs.push([x, z, 0.9 * scale]);
   }
+  // clear of the bottom of the stairs (x -4), where you walk in: they sit further along the front, as in the photo
+  agave(-1.3, D / 2 + 0.9, 1.15);
+  agave(-0.45, D / 2 + 0.55, 0.8);
+  // a door mat on the landing
+  b.box('mat', 0.5, 0.025, 0.75, -W / 2 - 0.3, FLOOR + 0.0125, DOOR_Z);
   // the yellow neighbour
   b.box('neighbour', 9, 8.5, 9, -27, 4.25, -14);
   b.box('trim', 9.8, 0.25, 9.8, -27, 8.6, -14);
@@ -462,11 +645,66 @@ export function createStreet(canvas: HTMLCanvasElement): Street {
     }
   }
 
+  // ---- plants: instanced, so a whole garden is a few draw calls ----
+  const treeMesh = foliage(needleTuft(), treeClumps, timeU, 3);
+  const bushMesh = foliage(leafTuft(), bushClumps, timeU, 5);
+  scene.add(treeMesh, bushMesh);
+  const lawnSpot = (r: () => number): [number, number] | null => {
+    // half the blades go where the camera walks past, the rest spread over the verge
+    // (not under the camera at the start: blades at eye level would look like reeds)
+    const near = r() < 0.55;
+    const x = near ? -14 + r() * 22 : (r() * 2 - 1) * 20;
+    const z = near ? 13 + r() * 9 : -12 + r() * 34;
+    const onPaving = x > -12 && x < 10 && z > -10 && z < 14;
+    const onPath = x > -7.2 && x < -2.8 && z >= 14 && z < 29.5;
+    return onPaving || onPath ? null : [x, z];
+  };
+  const grassMesh = grass(small ? 4500 : 9000, lawnSpot, timeU);
+  scene.add(grassMesh);
+
+  // soft contact shadows under plants and around the foot of the house (cheap ambient occlusion)
+  {
+    const gradient = (w: number, h: number, paint: (x: CanvasRenderingContext2D) => CanvasGradient) => {
+      const c = document.createElement('canvas');
+      c.width = w;
+      c.height = h;
+      const x = c.getContext('2d')!;
+      x.fillStyle = paint(x);
+      x.fillRect(0, 0, w, h);
+      return new THREE.CanvasTexture(c);
+    };
+    const radial = gradient(64, 64, (x) => {
+      const g = x.createRadialGradient(32, 32, 2, 32, 32, 32);
+      g.addColorStop(0, 'rgba(0,0,0,0.5)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      return g;
+    });
+    const edge = gradient(8, 64, (x) => {
+      const g = x.createLinearGradient(0, 0, 0, 64);
+      g.addColorStop(0, 'rgba(0,0,0,0.55)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      return g;
+    });
+    const decal = (map: THREE.Texture, geos: THREE.BufferGeometry[]) => {
+      const mesh = new THREE.Mesh(mergeGeometries(geos), new THREE.MeshBasicMaterial({ map, transparent: true, depthWrite: false }));
+      mesh.renderOrder = 1;
+      scene.add(mesh);
+    };
+    decal(radial, blobs.map(([x, z, r]) => new THREE.PlaneGeometry(r * 2, r * 2).rotateX(-Math.PI / 2).translate(x, 0.022, z)));
+    const side = (len: number, yaw: number, x: number, z: number) => new THREE.PlaneGeometry(len, 1.8).rotateX(-Math.PI / 2).rotateY(yaw).translate(x, 0.022, z);
+    decal(edge, [
+      side(W + 3, 0, 0, D / 2 + 0.9),
+      side(W + 3, Math.PI, 0, -D / 2 - 0.9),
+      side(D + 3, -Math.PI / 2, -W / 2 - 0.9, 0),
+      side(D + 3, Math.PI / 2, W / 2 + 0.9, 0),
+    ]);
+  }
+
   // ---- the door ----
   const doorPivot = new THREE.Group();
   doorPivot.position.set(-W / 2 + 0.05, FLOOR, DOOR_Z + DOOR_W / 2);
   scene.add(doorPivot);
-  const doorMat = new THREE.MeshStandardMaterial({ color: '#6b4a37', roughness: 0.6 });
+  const doorMat = new THREE.MeshStandardMaterial({ color: '#ffffff', map: woodTex, roughness: 0.55 });
   const door = new THREE.Mesh(new THREE.BoxGeometry(0.06, DOOR_H - 0.02, DOOR_W - 0.02), doorMat);
   door.position.set(0, DOOR_H / 2, -DOOR_W / 2);
   door.castShadow = true;
@@ -512,6 +750,32 @@ export function createStreet(canvas: HTMLCanvasElement): Street {
   floorGlow.position.set(-W / 2 - 0.55, FLOOR + 0.01, DOOR_Z);
   scene.add(floorGlow);
 
+  // dust floating in the light by the door
+  const DUST = 140;
+  const dustSeed = (() => {
+    const r = rng(77);
+    return Float32Array.from({ length: DUST * 3 }, () => r());
+  })();
+  const dustGeo = new THREE.BufferGeometry();
+  dustGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(DUST * 3), 3));
+  const dustMat = new THREE.PointsMaterial({ map: glowTex, size: 0.08, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, color: '#ffe2b0', fog: false });
+  const dust = new THREE.Points(dustGeo, dustMat);
+  dust.frustumCulled = false;
+  scene.add(dust);
+  function updateDust(t: number) {
+    const a = dustGeo.attributes.position as THREE.BufferAttribute;
+    for (let i = 0; i < DUST; i++) {
+      const sx = dustSeed[i * 3], sy = dustSeed[i * 3 + 1], sz = dustSeed[i * 3 + 2];
+      a.setXYZ(
+        i,
+        -W / 2 - 1.6 + sx * 2.2 + Math.sin(t * 0.3 + sy * 6) * 0.15,
+        FLOOR + 0.2 + sy * 2.6 + Math.sin(t * 0.5 + sz * 9) * 0.1,
+        DOOR_Z - 1.4 + sz * 2.8 + Math.cos(t * 0.25 + sx * 7) * 0.15,
+      );
+    }
+    a.needsUpdate = true;
+  }
+
   // ---- the portal: the inside of the house writes transparent pixels ----
   const portalMat = new THREE.MeshBasicMaterial({
     color: 0x000000,
@@ -551,6 +815,7 @@ export function createStreet(canvas: HTMLCanvasElement): Street {
   let last = performance.now();
   let width = 0, height = 0;
   const tmpColor = new THREE.Color();
+  let shadowDusk = -1, shadowOpen = -1, shadowFrames = 0;
   const BEAT = ['#ff2f8c', '#36e08f', '#3b5bff', '#ffd23f'].map((c) => new THREE.Color(c));
 
   function resize() {
@@ -566,23 +831,33 @@ export function createStreet(canvas: HTMLCanvasElement): Street {
 
   function apply(dt: number, time: number) {
     progress += (target - progress) * (1 - Math.exp(-dt * 5.5));
-    if (Math.abs(target - progress) < 0.0004) progress = target;
+    if (Math.abs(target - progress) < 0.0004 || !Number.isFinite(progress)) progress = target;
+    progress = Math.min(1, Math.max(0, progress));
     pointerSmooth.lerp(pointer, 1 - Math.exp(-dt * 3));
     const p = progress;
 
     // time of day: afternoon at the gate, concert time at the door
+    timeU.value = time / 1000;
     const dusk = smooth(0.08, 0.72, p);
     sky.top.copy(DAY.top).lerp(DUSK.top, dusk);
     sky.horizon.copy(DAY.horizon).lerp(DUSK.horizon, dusk);
     sky.sunColor.copy(DAY.sun).lerp(DUSK.sun, dusk);
+    sky.cloudLit.copy(DAY.lit).lerp(DUSK.lit, dusk);
+    sky.cloudShade.copy(DAY.shade).lerp(DUSK.shade, dusk);
+    sky.cover.value = THREE.MathUtils.lerp(0.66, 0.5, dusk);
     (scene.fog as THREE.Fog).color.copy(sky.horizon);
+    hillLayers.forEach((h, i) => {
+      const c = (h.material as THREE.MeshBasicMaterial).color;
+      c.copy(HILL_DAY[i]).lerp(HILL_DUSK[i], dusk).lerp(sky.horizon, HILL_HAZE[i]);
+    });
+    scene.environmentIntensity = THREE.MathUtils.lerp(1.0, 0.5, dusk);
     sun.position.copy(SUN_DAY).lerp(SUN_DUSK, dusk);
     sky.sunDir.copy(sun.position).normalize();
     sun.color.copy(sky.sunColor);
-    sun.intensity = THREE.MathUtils.lerp(2.7, 1.5, dusk);
-    hemi.intensity = THREE.MathUtils.lerp(1.4, 0.6, dusk);
+    sun.intensity = THREE.MathUtils.lerp(3.4, 1.6, dusk);
+    hemi.intensity = THREE.MathUtils.lerp(0.5, 0.6, dusk);
     hemi.color.set('#d6e6ff').lerp(tmpColor.set('#6c6fd6'), dusk);
-    renderer.toneMappingExposure = THREE.MathUtils.lerp(1.0, 0.92, dusk);
+    renderer.toneMappingExposure = THREE.MathUtils.lerp(1.05, 0.95, dusk);
 
     const lampOn = smooth(0.45, 0.6, p);
     porch.intensity = lampOn * 9;
@@ -591,6 +866,13 @@ export function createStreet(canvas: HTMLCanvasElement): Street {
     // door
     const open = smooth(DOOR_OPEN_FROM, DOOR_OPEN_TO, p);
     doorPivot.rotation.y = -open * 1.78;
+    if (Math.abs(dusk - shadowDusk) > 0.004 || Math.abs(open - shadowOpen) > 0.004 || shadowFrames++ < 3) {
+      renderer.shadowMap.needsUpdate = true;
+      shadowDusk = dusk;
+      shadowOpen = open;
+    }
+    dustMat.opacity = smooth(0.5, 0.72, p) * 0.55 * (1 - open * 0.3);
+    if (dustMat.opacity > 0.01) updateDust(time / 1000);
 
     // bass you can see: the gap light pulses at ~112 bpm
     const beatT = (time / 1000) * (112 / 60);
@@ -624,7 +906,7 @@ export function createStreet(canvas: HTMLCanvasElement): Street {
     const portrait = camera.aspect < 0.9;
     // narrow screens: step back a bit from the street so the whole house fits
     if (portrait) camera.translateZ(9 * (1 - smooth(0.05, 0.36, p)));
-    const baseFov = portrait ? 58 : camera.aspect < 1.3 ? 48 : 40;
+    const baseFov = portrait ? 58 : camera.aspect < 1.3 ? 48 : 44;
     camera.fov = baseFov + smooth(0.84, 1, p) * 14;
     camera.updateProjectionMatrix();
     skyDome.position.copy(camera.position);
@@ -632,13 +914,43 @@ export function createStreet(canvas: HTMLCanvasElement): Street {
     frameCb?.({ progress: p, door: open });
   }
 
+  // Quality governor: if the device struggles, lower the resolution step by step (never raise it again,
+  // so the picture doesn't pump). Costly extras go first.
+  const basePR = Math.min(window.devicePixelRatio, small ? 2 : 1.6);
+  const LEVELS = [1, 0.82, 0.66, 0.52];
+  let level = 0, ema = 16.7, warm = 0, since = 0;
+  function setLevel(l: number) {
+    level = l;
+    renderer.setPixelRatio(basePR * LEVELS[l]);
+    width = 0; // force a resize on the next frame
+    if (l >= 2) grassMesh.visible = false;
+    if (l >= 3) sun.castShadow = false;
+  }
+  renderer.setPixelRatio(basePR);
+
   function tick(now: number) {
-    const dt = Math.min(0.05, (now - last) / 1000);
+    // (never negative: after a tab comes back to the foreground the frame time can jump backwards)
+    const ms = Math.max(0, Math.min(100, now - last));
+    const dt = Math.min(0.05, ms / 1000);
     last = now;
+    // ignore the first frames (shader compilation) and slow frames from background tabs
+    if (++warm > 40 && !document.hidden) {
+      ema = ema * 0.92 + ms * 0.08;
+      if (++since > 60 && ema > 35 && level < LEVELS.length - 1) {
+        setLevel(level + 1);
+        since = 0;
+        ema = 16.7;
+      }
+    }
     resize();
     apply(dt, now);
     renderer.render(scene, camera);
   }
+
+  // dev only: look at the scene from the console (stripped from production builds)
+  if (import.meta.env.DEV) Object.assign(window, { __street: { renderer, scene, camera, get progress() { return progress; }, get level() { return level; }, setLevel, shot(p: number) { target = progress = p; resize(); apply(0.016, 1000); renderer.render(scene, camera); return renderer.domElement.toDataURL('image/png'); } } });
+
+  if (import.meta.env.DEV) console.info(`[street] scene built in ${Math.round(performance.now() - t0)} ms`);
 
   let running = false;
   const onVisibility = () => {
@@ -678,7 +990,14 @@ export function createStreet(canvas: HTMLCanvasElement): Street {
           (Array.isArray(m) ? m : [m]).forEach((mm) => mm.dispose());
         }
       });
-      plaster.dispose();
+      scene.traverse((o) => {
+        const m = (o as THREE.Mesh).material as THREE.Material | THREE.Material[] | undefined;
+        for (const mm of Array.isArray(m) ? m : m ? [m] : []) {
+          const t = mm as THREE.MeshStandardMaterial;
+          t.map?.dispose();
+          t.bumpMap?.dispose();
+        }
+      });
       glowTex.dispose();
       renderer.dispose();
       renderer.forceContextLoss();
