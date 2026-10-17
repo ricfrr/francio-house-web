@@ -14,7 +14,7 @@ const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t 
 export function initOutside() {
   const outside = document.querySelector<HTMLElement>('[data-outside]');
   const spacer = document.querySelector<HTMLElement>('[data-spacer]');
-  const canvas = document.querySelector<HTMLCanvasElement>('[data-street-canvas]');
+  let canvas = document.querySelector<HTMLCanvasElement>('[data-street-canvas]');
   const house = document.getElementById('interior');
   if (!outside || !spacer || !canvas || !house) return;
 
@@ -58,6 +58,8 @@ export function initOutside() {
     if (street) return street;
     loading ??= import('./street')
       .then(({ createStreet }) => {
+        // the visitor may have skipped inside while the scene was downloading
+        if (!isOutside()) return null;
         const s = createStreet(canvas!);
         s.onFrame(onFrame);
         s.setTarget(still() ? 0 : scrollProgress(), true);
@@ -135,8 +137,15 @@ export function initOutside() {
       url.searchParams.delete('intro');
       history.replaceState(null, '', url);
     }
-    street?.dispose();
-    street = null;
+    if (street) {
+      street.dispose();
+      street = null;
+      // dispose() throws the WebGL context away to free GPU memory, and a canvas can't get
+      // a new one afterwards: give the next trip outside a fresh canvas.
+      const fresh = canvas!.cloneNode(false) as HTMLCanvasElement;
+      canvas!.replaceWith(fresh);
+      canvas = fresh;
+    }
     document.getElementById('next')?.focus({ preventScroll: true });
     document.dispatchEvent(new CustomEvent('house:inside'));
   }
