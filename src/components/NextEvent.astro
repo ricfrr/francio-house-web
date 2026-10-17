@@ -10,6 +10,7 @@ import Fringe from './decor/Fringe.astro';
 import StringLights from './decor/StringLights.astro';
 import Macaw from './decor/Macaw.astro';
 import Leaf from './decor/Leaf.astro';
+import { heart } from '../lib/decor';
 
 interface Props {
   lang: Lang;
@@ -19,6 +20,8 @@ interface Props {
 const { lang, candidates } = Astro.props;
 const t = ui[lang];
 const isUrl = (s?: string) => !!s && /^(https?:|mailto:)/.test(s);
+
+const leaf = heart();
 
 // The pothos hanging on the mint wall: one wavy stem, leaves growing from points on it.
 const vine = (() => {
@@ -41,11 +44,11 @@ const vine = (() => {
   const leaves = spots.map(([si, t, side, scale], i) => {
     const [x, y] = at(seg[si], t);
     // leaves point outwards and slightly down, alternating sides
-    return { x: +x.toFixed(1), y: +y.toFixed(1), angle: side * (112 + (i % 3) * 9), scale, stalk: 7, color: greens[i] };
+    return { x: +x.toFixed(1), y: +y.toFixed(1), angle: side * (112 + (i % 3) * 9), scale, stalk: 10, color: greens[i] };
   });
   // the last leaf hangs from the tip
   const [tx, ty] = seg[1][3];
-  leaves.push({ x: tx, y: ty, angle: 180, scale: 0.3, stalk: 4, color: greens[6] });
+  leaves.push({ x: tx, y: ty, angle: 180, scale: 0.3, stalk: 6, color: greens[6] });
   return { stem, leaves };
 })();
 ---
@@ -68,10 +71,14 @@ const vine = (() => {
     <path d={vine.stem} fill="none" stroke="#2a5a2a" stroke-width="3.2" stroke-linecap="round"></path>
     {
       vine.leaves.map((l) => (
-        // each leaf sits on a short stalk that starts exactly on the stem
         <g transform={`translate(${l.x} ${l.y}) rotate(${l.angle})`}>
-          <path d={`M0 0L0 ${-l.stalk}`} stroke="#2a5a2a" stroke-width="2.2" stroke-linecap="round" />
-          <use href="#leaf-heart" transform={`translate(0 ${-l.stalk}) scale(${l.scale}) translate(-100 -240)`} style={`color:${l.color}`} />
+          <path class="vine__stalk" d={`M0 0L0 ${-l.stalk}`} stroke="#2a5a2a" stroke-width="2.6" stroke-linecap="round" />
+          {/* the leaf is drawn here, not as a shared symbol: its pointed end (100,236) is moved onto the stalk's end */}
+          <g class="vine__leaf" transform={`translate(0 ${-l.stalk + 1.5}) scale(${l.scale}) translate(-100 -236)`}>
+            <path d={leaf.blade[0]} fill={l.color} />
+            <path d={leaf.veins} fill="none" stroke="rgb(0 0 0 / 0.22)" stroke-width="3" stroke-linecap="round" />
+          </g>
+          <circle r="2.8" fill="#2a5a2a" />
         </g>
       ))
     }
