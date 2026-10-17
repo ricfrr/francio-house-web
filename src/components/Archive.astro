@@ -197,16 +197,27 @@ const first = events.at(-1);
   }
 
   .collage {
-    columns: 4 230px;
-    column-gap: clamp(20px, 3vw, 44px);
+    /* a grid, not CSS columns: Safari splits rotated items across columns */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
+    align-items: start;
+    gap: clamp(28px, 3.4vw, 48px) clamp(20px, 3vw, 44px);
     padding: 0;
+  }
+
+  /* a little stagger, like things pinned up by hand */
+  .collage > .tile:nth-child(4n + 2) {
+    margin-top: clamp(0px, 3vw, 40px);
+  }
+
+  .collage > .tile:nth-child(4n + 3) {
+    margin-top: clamp(0px, 1.2vw, 16px);
   }
 
   .tile {
     position: relative;
     list-style: none;
-    break-inside: avoid;
-    margin: 0 0 clamp(28px, 3.4vw, 48px);
+    margin: 0;
     transform: rotate(var(--rot));
     transition: transform 0.45s var(--ease-spring);
   }
