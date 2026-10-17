@@ -110,7 +110,7 @@ const it = {
     kicker: 'Stanza 4 · il muro dei gufi',
     title: ['la', 'casa'],
     lede:
-      'Francio House è una casa, non un locale. Dalla strada sembra uguale a tutte le altre del quartiere: muri bianchi, una scala, una porta. Dentro, i muri sono pieni di pappagalli, gufi e coccodrilli — e qualche volta al mese il salotto diventa un palco per quaranta persone sedute per terra.',
+      'Francio House è una casa, non un locale. Dalla strada sembra uguale a tutte le altre del quartiere: muri bianchi, una scala, una porta. Dentro, i muri sono pieni di pappagalli, gufi e coccodrilli — e qualche volta al mese il salotto diventa un palco per quaranta persone.',
     how: 'Come funziona una serata',
     steps: [
       ['Prenota', "Si entra solo su prenotazione: scrivici su Instagram o per email. L'indirizzo esatto arriva prima della serata."],
@@ -235,7 +235,7 @@ const en: Dict = {
     kicker: 'Room 4 · the owl wall',
     title: ['the', 'house'],
     lede:
-      'Francio House is a home, not a venue. From the street it looks like every other house on the block: white walls, a staircase, a door. Inside, the walls are covered in parrots, owls and crocodiles — and a few times a month the living room becomes a stage for forty people sitting on the floor.',
+      'Francio House is a home, not a venue. From the street it looks like every other house on the block: white walls, a staircase, a door. Inside, the walls are covered in parrots, owls and crocodiles — and a few times a month the living room becomes a stage for forty people.',
     how: 'How a night works',
     steps: [
       ['Book', 'Entry is by booking only: message us on Instagram or by email. The exact address arrives before the night.'],

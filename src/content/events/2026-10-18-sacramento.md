@@ -8,6 +8,8 @@ posterAlt: Dipinto al tramonto in toni rosa, con una giraffa gigante con la crav
 summary: Domenica pomeriggio con Sacramento dal vivo. Concerto, snack e drink a 10 €. Segnati la data e prenota il tuo posto.
 entry: 10 € · concerto, snack e drink
 rsvp: Su prenotazione
+links:
+  spotify: https://open.spotify.com/artist/0ovT4fn9cuMxfhRNGPUzON
 en:
   posterAlt: Sunset painting in shades of pink, with a giant giraffe in a sequinned tie next to a village church and a man in a white suit and cowboy hat by a green car.
   summary: A Sunday afternoon with Sacramento live. Concert, snacks and drinks for €10. Save the date and book your spot.
