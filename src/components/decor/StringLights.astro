@@ -5,58 +5,114 @@ interface Props {
   class?: string;
 }
 const { tone = 'warm', class: className = '' } = Astro.props;
-// two sagging cords across the room
+
+// Two sagging cords across the room. The cords stretch to any screen width while the
+// bulbs stay round: they're positioned in % on top of the stretched drawing.
+const W = 1200, H = 140;
 const cords = [
   { y0: 10, y1: 30, sag: 70, n: 13 },
   { y0: 40, y1: 6, sag: 54, n: 11 },
 ];
 const fairy = ['#3b8bff', '#36e08f', '#3b8bff', '#7af7ff'];
+const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(3)}%`;
 const bulbs = cords.flatMap((c, ci) =>
   Array.from({ length: c.n }, (_, i) => {
     const t = (i + 0.5) / c.n;
-    const x = t * 1200;
-    const y = (1 - t) * c.y0 + t * c.y1 + 4 * c.sag * t * (1 - t);
-    return { x, y, ci, i, color: tone === 'warm' ? '#ffe2a1' : fairy[(i + ci) % fairy.length] };
+    // same quadratic curve as the cord below
+    const ctrl = (c.y0 + c.y1) / 2 + c.sag * 2;
+    const y = (1 - t) * (1 - t) * c.y0 + 2 * (1 - t) * t * ctrl + t * t * c.y1;
+    return {
+      left: pct(t * W, W),
+      top: pct(y, H),
+      color: tone === 'warm' ? '#ffe2a1' : fairy[(i + ci) % fairy.length],
+      delay: `${(((i * 7 + ci * 3) % 11) * 0.37).toFixed(2)}s`,
+    };
   }),
 );
 ---
 
-<svg class:list={['lights', `lights--${tone}`, className]} viewBox="0 0 1200 140" preserveAspectRatio="xMidYMin slice" aria-hidden="true" focusable="false">
-  <defs>
-    <radialGradient id={`glow-${tone}`}>
-      <stop offset="0" stop-color="currentColor" stop-opacity="0.85"></stop>
-      <stop offset="1" stop-color="currentColor" stop-opacity="0"></stop>
-    </radialGradient>
-  </defs>
-  {
-    cords.map((c) => (
-      <path d={`M0 ${c.y0} Q600 ${(c.y0 + c.y1) / 2 + c.sag * 2} 1200 ${c.y1}`} fill="none" stroke="#1d1712" stroke-width="2" />
-    ))
-  }
-  {
-    bulbs.map((b) => (
-      <g class="bulb" style={`color:${b.color};--d:${((b.i * 7 + b.ci * 3) % 11) * 0.37}s`}>
-        <circle cx={b.x} cy={b.y + 14} r={tone === 'warm' ? 26 : 16} fill={`url(#glow-${tone})`} class="bulb__glow" />
-        <rect x={b.x - 3} y={b.y} width="6" height="7" fill="#1d1712" />
-        <circle cx={b.x} cy={b.y + 13} r={tone === 'warm' ? 6.5 : 4} fill="currentColor" />
-      </g>
-    ))
-  }
-</svg>
+<div class:list={['lights', `lights--${tone}`, className]} aria-hidden="true">
+  <svg class="lights__cords" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" focusable="false">
+    {
+      cords.map((c) => (
+        <path
+          d={`M0 ${c.y0} Q600 ${(c.y0 + c.y1) / 2 + c.sag * 2} ${W} ${c.y1}`}
+          fill="none"
+          stroke="#1d1712"
+          stroke-width="2"
+          vector-effect="non-scaling-stroke"
+        />
+      ))
+    }
+  </svg>
+  {bulbs.map((b) => <span class="bulb" style={`left:${b.left};top:${b.top};--c:${b.color};--d:${b.delay}`} />)}
+</div>
 
 <style>
   .lights {
+    --bulb: 13px;
     position: absolute;
     left: 0;
     width: 100%;
-    height: clamp(90px, 12vw, 150px);
+    height: clamp(80px, 9vw, 130px);
     pointer-events: none;
   }
 
-  .bulb__glow {
+  .lights--fairy {
+    --bulb: 8px;
+  }
+
+  @media (max-width: 600px) {
+    .lights {
+      --bulb: 9px;
+    }
+
+    .lights--fairy {
+      --bulb: 6px;
+    }
+  }
+
+  .lights__cords {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .bulb {
+    position: absolute;
+    width: var(--bulb);
+    height: var(--bulb);
+    margin-left: calc(var(--bulb) / -2);
+    margin-top: 3px;
+    border-radius: 50%;
+    background: var(--c);
+  }
+
+  /* the socket */
+  .bulb::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: -5px;
+    width: 6px;
+    height: 7px;
+    margin-left: -3px;
+    background: #1d1712;
+    border-radius: 1px;
+  }
+
+  /* the glow */
+  .bulb::after {
+    content: '';
+    position: absolute;
+    inset: calc(var(--bulb) * -1.6);
+    border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--c) 85%, transparent), transparent 70%);
+    mix-blend-mode: screen;
     animation: flicker 3.6s ease-in-out infinite;
     animation-delay: var(--d);
-    mix-blend-mode: screen;
   }
 
   @keyframes flicker {
