@@ -173,6 +173,7 @@ export interface Street {
   setTarget(p: number, immediate?: boolean): void;
   /** Pointer position, -1 → 1 on both axes, for a little parallax. */
   setPointer(x: number, y: number): void;
+  /** Called after the frame has been rendered. */
   onFrame(cb: (f: StreetFrame) => void): void;
   start(): void;
   stop(): void;
@@ -911,7 +912,7 @@ export function createStreet(canvas: HTMLCanvasElement): Street {
     camera.updateProjectionMatrix();
     skyDome.position.copy(camera.position);
 
-    frameCb?.({ progress: p, door: open });
+    return { progress: p, door: open };
   }
 
   // Quality governor: if the device struggles, lower the resolution step by step (never raise it again,
@@ -943,8 +944,9 @@ export function createStreet(canvas: HTMLCanvasElement): Street {
       }
     }
     resize();
-    apply(dt, now);
+    const frame = apply(dt, now);
     renderer.render(scene, camera);
+    frameCb?.(frame);
   }
 
   // dev only: look at the scene from the console (stripped from production builds)

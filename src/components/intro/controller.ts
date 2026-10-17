@@ -51,6 +51,9 @@ export function initOutside() {
   }
 
   function onFrame(f: StreetFrame) {
+    if (!isOutside()) return;
+    // Keep the loading house visible until the street has actually rendered.
+    if (!outside!.classList.contains('is-3d')) outside!.classList.add('is-3d');
     if (!still()) paint(f.progress);
   }
 
@@ -64,8 +67,6 @@ export function initOutside() {
         s.onFrame(onFrame);
         s.setTarget(still() ? 0 : scrollProgress(), true);
         s.start();
-        // show the canvas once it has drawn a frame
-        requestAnimationFrame(() => requestAnimationFrame(() => outside!.classList.add('is-3d')));
         street = s;
         return s;
       })
@@ -157,7 +158,7 @@ export function initOutside() {
     window.scrollTo({ top: 0, behavior: 'instant' });
     paint(0);
     ensureStreet().then((s) => s?.setTarget(0, true));
-    bell.focus({ preventScroll: true });
+    outside!.querySelector<HTMLButtonElement>('[data-skip]')?.focus({ preventScroll: true });
   }
 
   // ---- wire up ----

@@ -42,6 +42,7 @@ const it = {
   },
   outside: {
     region: 'Fuori dalla casa',
+    loading: 'Prepariamo la casa…',
     skip: 'Salta intro',
     enter: 'Entra in casa',
     hint: 'oppure scorri per salire',
@@ -167,6 +168,7 @@ const en: Dict = {
   },
   outside: {
     region: 'Outside the house',
+    loading: 'Getting the house ready…',
     skip: 'Skip intro',
     enter: 'Enter the house',
     hint: 'or scroll to walk up',
