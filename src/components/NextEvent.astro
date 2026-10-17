@@ -19,6 +19,35 @@ interface Props {
 const { lang, candidates } = Astro.props;
 const t = ui[lang];
 const isUrl = (s?: string) => !!s && /^(https?:|mailto:)/.test(s);
+
+// The pothos hanging on the mint wall: one wavy stem, leaves growing from points on it.
+const vine = (() => {
+  type P = [number, number];
+  const seg: [P, P, P, P][] = [
+    [[70, 0], [62, 70], [82, 120], [68, 180]],
+    [[68, 180], [54, 240], [80, 290], [66, 352]],
+  ];
+  const at = ([a, b, c, d]: [P, P, P, P], t: number): P => {
+    const u = 1 - t;
+    return [0, 1].map((k) => u * u * u * a[k] + 3 * u * u * t * b[k] + 3 * u * t * t * c[k] + t * t * t * d[k]) as P;
+  };
+  const stem = `M${seg[0][0]}C${seg[0][1]} ${seg[0][2]} ${seg[0][3]}C${seg[1][1]} ${seg[1][2]} ${seg[1][3]}`;
+  const greens = ['#3aa65a', '#2f9150', '#4cbc69', '#3aa65a', '#2a8446', '#4cbc69', '#36a055'];
+  // [segment, position along it, side, size]; leaves get bigger towards the tip, like a real trailing plant
+  const spots: [number, number, number, number][] = [
+    [0, 0.3, 1, 0.2], [0, 0.6, -1, 0.23], [0, 0.88, 1, 0.26],
+    [1, 0.2, -1, 0.28], [1, 0.48, 1, 0.3], [1, 0.76, -1, 0.31],
+  ];
+  const leaves = spots.map(([si, t, side, scale], i) => {
+    const [x, y] = at(seg[si], t);
+    // leaves point outwards and slightly down, alternating sides
+    return { x: +x.toFixed(1), y: +y.toFixed(1), angle: side * (112 + (i % 3) * 9), scale, stalk: 7, color: greens[i] };
+  });
+  // the last leaf hangs from the tip
+  const [tx, ty] = seg[1][3];
+  leaves.push({ x: tx, y: ty, angle: 180, scale: 0.3, stalk: 4, color: greens[6] });
+  return { stem, leaves };
+})();
 ---
 
 <section id="next" class="room hero" aria-labelledby="next-title" tabindex="-1">
@@ -35,13 +64,18 @@ const isUrl = (s?: string) => !!s && /^(https?:|mailto:)/.test(s);
   <Leaf kind="monstera" class="hero__leaf hero__leaf--a" />
   <Leaf kind="palm" class="hero__leaf hero__leaf--b" />
   <Leaf kind="monstera" class="hero__leaf hero__leaf--c" />
-  <div class="hero__vine" aria-hidden="true">
+  <svg class="hero__vine" viewBox="0 0 140 360" aria-hidden="true" focusable="false">
+    <path d={vine.stem} fill="none" stroke="#2a5a2a" stroke-width="3.2" stroke-linecap="round"></path>
     {
-      [0, 1, 2, 3, 4, 5].map((i) => (
-        <Leaf kind="heart" class="hero__vine-leaf" style={`--i:${i}`} />
+      vine.leaves.map((l) => (
+        // each leaf sits on a short stalk that starts exactly on the stem
+        <g transform={`translate(${l.x} ${l.y}) rotate(${l.angle})`}>
+          <path d={`M0 0L0 ${-l.stalk}`} stroke="#2a5a2a" stroke-width="2.2" stroke-linecap="round" />
+          <use href="#leaf-heart" transform={`translate(0 ${-l.stalk}) scale(${l.scale}) translate(-100 -240)`} style={`color:${l.color}`} />
+        </g>
       ))
     }
-  </div>
+  </svg>
 
   <h2 id="next-title" class="sr-only">{t.next.heading}</h2>
 
@@ -271,26 +305,16 @@ const isUrl = (s?: string) => !!s && /^(https?:|mailto:)/.test(s);
   /* pothos hanging from the ceiling on the mint wall */
   .hero__vine {
     position: absolute;
-    top: 150px;
-    right: clamp(20px, 6vw, 90px);
-    width: 4px;
-    height: clamp(180px, 30vh, 320px);
-    background: #2a5a2a;
-    border-radius: 4px;
+    /* hangs from the light cord, behind the fringe */
+    top: 50px;
+    right: clamp(12px, 5vw, 80px);
+    width: clamp(110px, 10vw, 150px);
+    height: auto;
+    overflow: visible;
     transform-origin: 50% 0;
     animation: vine 6s ease-in-out infinite alternate;
     z-index: 0;
-  }
-
-  .hero :global(.hero__vine-leaf) {
-    position: absolute;
-    width: 46px;
-    max-width: none;
-    color: #3aa65a;
-    top: calc(var(--i) * 17%);
-    left: -21px;
-    transform: rotate(calc(var(--i) * 70deg - 120deg)) translateY(-40%);
-    transform-origin: 50% 100%;
+    pointer-events: none;
   }
 
   @keyframes vine {
@@ -566,8 +590,8 @@ const isUrl = (s?: string) => !!s && /^(https?:|mailto:)/.test(s);
     }
 
     .hero__vine {
-      top: 120px;
-      height: 180px;
+      top: 40px;
+      width: 90px;
     }
 
     .hero__empty .hero__info {
