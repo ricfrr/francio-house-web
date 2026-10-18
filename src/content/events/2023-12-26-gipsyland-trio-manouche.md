@@ -2,7 +2,7 @@
 title: After Christmas Party
 artist: Gipsyland Trio Manouche
 genre: manouche
-date: 2024-12-26
+date: 2023-12-26
 time: "19:00"
 poster: ./posters/gipsyland-trio-manouche.jpg
 posterAlt: Illustrazione vintage su un'insegna di latta, con una donna dal foulard rosso che suona una chitarra seduta su una custodia blu, sotto un cielo stellato con una grande luna e stelle gialle.
@@ -18,10 +18,10 @@ en:
   rsvp: Advance booking
 ---
 
-Il 26 dicembre 2024, alle 19, il Gipsyland Trio Manouche ha suonato dal vivo in casa per l'After Christmas Party,
+Il 26 dicembre 2023, alle 19, il Gipsyland Trio Manouche ha suonato dal vivo in casa per l'After Christmas Party,
 con l'aperitivo. Ingresso 10 €, con prenotazione in anticipo.
 
 <!-- en -->
 
-On 26 December 2024, at 7 pm, Gipsyland Trio Manouche played live at the house for the After Christmas Party,
+On 26 December 2023, at 7 pm, Gipsyland Trio Manouche played live at the house for the After Christmas Party,
 with an aperitivo. Entry €10, with advance booking.
