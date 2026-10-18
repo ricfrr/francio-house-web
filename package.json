@@ -3,13 +3,14 @@
   "type": "module",
   "version": "1.0.0",
   "private": true,
-  "description": "Francio House — a white house on an ordinary street, with a jungle inside.",
+  "description": "Francio House \u2014 a white house on an ordinary street, with a jungle inside.",
   "scripts": {
     "dev": "astro dev",
     "build": "astro check && astro build",
     "preview": "astro preview",
     "new-event": "node scripts/new-event.mjs",
-    "astro": "astro"
+    "astro": "astro",
+    "stats": "node scripts/stats.mjs"
   },
   "engines": {
     "node": ">=20.3.0"

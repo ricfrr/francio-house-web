@@ -233,6 +233,25 @@ You'll see visits per page, where visitors came from, country, device and browse
 as events (names in the dashboard): `intro-enter` (doorbell), `intro-skip`, `step-outside`, `lang-switch`,
 `rsvp-<event>` (booking button), `calendar-<event>`, `artist-link-<site>`. To count another button, add `data-track="name"` to it.
 
+### A nicer, local dashboard
+
+GoatCounter's own page is functional but plain, so there's a dashboard of our own that reads the same numbers: visits per day,
+top pages (with the artist's name), where people come from, the intro funnel (doorbell vs skip), booking and calendar clicks per night,
+countries, devices, browsers, Italian vs English. It runs **only on your computer**.
+
+```bash
+npm run stats
+```
+
+Open http://localhost:4400. The first time it needs a read-only key: on goatcounter.com click your name (top right) → API →
+"Create new token", tick **Read statistics**, then put it in a file called `.env.local` in the project folder (git ignores it, so it's never published):
+
+```
+GOATCOUNTER_TOKEN=paste-the-token-here
+```
+
+`npm run stats -- --demo` shows the dashboard with made-up data. Visitors' text (referrers, paths) is always shown as plain text, never as HTML.
+
 ---
 
 ## Deploying to GitHub Pages and francio.house
