@@ -4,6 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Francio House · numeri</title>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="theme-color" content="#d3166d" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Numeri" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <style>
       @font-face { font-family: 'Bricolage'; src: url('/fonts/bricolage.woff2') format('woff2'); font-weight: 200 800; font-stretch: 75% 100%; }
       @font-face { font-family: 'Mono'; src: url('/fonts/mono-400.woff2') format('woff2'); font-weight: 400; }
@@ -145,7 +152,8 @@
       };
       const pct = (a, b) => (b ? Math.round((a / b) * 100) + '%' : '–');
 
-      let days = 30;
+      let days = [7, 30, 90].includes(Number(new URLSearchParams(location.search).get('days'))) ? Number(new URLSearchParams(location.search).get('days')) : 30;
+      let stale = false;
 
       function card(title, small, ...body) {
         return el('section', { class: 'card' }, el('h2', {}, title, small ? el('small', {}, small) : null), ...body);
@@ -215,6 +223,7 @@
         const app = $('#app');
         app.replaceChildren();
         $('#demo').hidden = !d.demo;
+        if (stale) app.append(el('div', { class: 'warn' }, 'Il servizio sul Mac non risponde: questi sono gli ultimi numeri salvati. Per riaccenderlo: npm run stats:install'));
         if (d.warnings?.length) app.append(el('div', { class: 'warn' }, 'Qualche dato non è arrivato: ' + d.warnings.join(' · ')));
 
         const best = d.daily.reduce((a, b) => (b.count > a.count ? b : a), { count: -1 });
@@ -250,6 +259,7 @@
         document.querySelectorAll('[data-days]').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.days) === days)));
         try {
           const r = await fetch(`/api/data?days=${days}${fresh ? '&fresh=1' : ''}`);
+          stale = r.headers.get('X-Stale') === '1';
           const d = await r.json();
           if (d.error) throw new Error(d.error);
           render(d);
@@ -260,6 +270,8 @@
       document.querySelectorAll('[data-days]').forEach((b) => b.addEventListener('click', () => { days = Number(b.dataset.days); load(); }));
       $('#refresh').addEventListener('click', () => load(true));
       load();
+      // lets the dashboard open as an app and keep its shell when the service is off
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
     </script>
   </body>
 </html>

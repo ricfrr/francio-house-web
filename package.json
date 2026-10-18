@@ -10,7 +10,12 @@
     "preview": "astro preview",
     "new-event": "node scripts/new-event.mjs",
     "astro": "astro",
-    "stats": "node scripts/stats.mjs"
+    "stats": "node scripts/stats.mjs",
+    "stats:install": "node scripts/stats-service.mjs install",
+    "stats:uninstall": "node scripts/stats-service.mjs uninstall",
+    "stats:status": "node scripts/stats-service.mjs status",
+    "stats:logs": "node scripts/stats-service.mjs logs",
+    "stats:restart": "node scripts/stats-service.mjs restart"
   },
   "engines": {
     "node": ">=20.3.0"

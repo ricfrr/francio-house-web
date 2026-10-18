@@ -250,7 +250,29 @@ Open http://localhost:4400. The first time it needs a read-only key: on goatcoun
 GOATCOUNTER_TOKEN=paste-the-token-here
 ```
 
-`npm run stats -- --demo` shows the dashboard with made-up data. Visitors' text (referrers, paths) is always shown as plain text, never as HTML.
+`npm run stats -- --demo` shows the dashboard with made-up data.
+
+#### Keep it running, and open it like an app (macOS)
+
+Instead of starting it by hand each time, install it as a background service. On a Mac the equivalent of `systemctl` is **launchd**; this sets up
+a LaunchAgent in your own account (no admin rights):
+
+```bash
+npm run stats:install     # start it now and at every login
+npm run stats:status      # running? how much CPU/memory?
+npm run stats:logs        # last lines of its log
+npm run stats:restart
+npm run stats:uninstall   # stop and remove it
+```
+
+It's very light: idle it uses ~0% CPU and a few tens of MB, and it only talks to GoatCounter when you open the dashboard
+(the answer is cached for a minute). If it ever crashes, launchd restarts it. macOS may show a "Background item added" notice the first time.
+
+The dashboard is also an installable app (PWA, with its own icon):
+- **Chrome / Edge:** open http://localhost:4400, then the install icon in the address bar (or menu → *Install Francio House · numeri*).
+- **Safari (macOS Sonoma or later):** open it, then File → *Add to Dock*.
+
+It then opens in its own window from the Dock or Launchpad. The icon is in `scripts/stats-app/`. Visitors' text (referrers, paths) is always shown as plain text, never as HTML.
 
 ---
 

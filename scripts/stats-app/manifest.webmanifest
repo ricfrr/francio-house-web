@@ -1,0 +1,22 @@
+{
+  "name": "Francio House · numeri",
+  "short_name": "Numeri",
+  "description": "Le visite al sito di Francio House, in locale e senza cookie.",
+  "lang": "it",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fbf6ec",
+  "theme_color": "#d3166d",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ],
+  "shortcuts": [
+    { "name": "Ultimi 7 giorni", "url": "/?days=7" },
+    { "name": "Ultimi 30 giorni", "url": "/?days=30" },
+    { "name": "Ultimi 90 giorni", "url": "/?days=90" }
+  ]
+}

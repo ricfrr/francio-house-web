@@ -247,6 +247,12 @@ http
         res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
         return res.end(body);
       }
+      const appFile = url.pathname.slice(1);
+      if (/^[\w.-]+$/.test(appFile) && existsSync(join(root, 'scripts/stats-app', appFile))) {
+        const types = { svg: 'image/svg+xml', png: 'image/png', js: 'text/javascript; charset=utf-8', webmanifest: 'application/manifest+json' };
+        res.writeHead(200, { 'Content-Type': types[appFile.split('.').pop()] ?? 'application/octet-stream', 'Cache-Control': 'no-cache' });
+        return res.end(readFileSync(join(root, 'scripts/stats-app', appFile)));
+      }
       if (fonts[url.pathname]) {
         res.writeHead(200, { 'Content-Type': 'font/woff2', 'Cache-Control': 'max-age=86400' });
         return res.end(readFileSync(join(root, fonts[url.pathname])));
