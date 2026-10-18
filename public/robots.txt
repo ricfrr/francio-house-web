@@ -1,0 +1,3 @@
+# Francio House is a private house: we'd rather not be listed anywhere.
+User-agent: *
+Disallow: /

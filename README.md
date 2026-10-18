@@ -15,6 +15,12 @@ the next concert, posters pinned to the wall, and an archive of every night that
 
 ---
 
+## Search engines
+
+The site asks search engines **not to list it**: every page has `<meta name="robots" content="noindex, nofollow, noimageindex">`
+and `public/robots.txt` says `Disallow: /`. This only works on well-behaved crawlers, and the pages stay reachable by anyone who has the link.
+To allow indexing one day: delete `public/robots.txt` and the `robots` meta line in `src/layouts/Base.astro`.
+
 ## Contents
 
 1. [Run it locally](#run-it-locally)

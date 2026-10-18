@@ -34,6 +34,8 @@ const shareImage = new URL(image ?? '/og.jpg', site.url).href;
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    <!-- not for search engines: the house is private (see also public/robots.txt) -->
+    <meta name="robots" content="noindex, nofollow, noimageindex" />
     <link rel="canonical" href={canonical} />
     <meta name="theme-color" content={themeColor} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
