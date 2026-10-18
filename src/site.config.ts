@@ -16,7 +16,7 @@ export const site = {
    * Leave it empty and nothing is loaded.
    */
   analytics: {
-    goatcounter: '' as string,
+    goatcounter: 'ricfrr' as string,
   },
 
   /**
