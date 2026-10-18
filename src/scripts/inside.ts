@@ -178,6 +178,23 @@ function parallax() {
   update();
 }
 
+// ---------------- anonymous click counts (only does something when GoatCounter is configured) ----------------
+
+type GoatCounter = { count?: (o: { path: string; title?: string; event?: boolean }) => void };
+
+function tracking() {
+  document.addEventListener(
+    'click',
+    (e) => {
+      const el = (e.target as Element | null)?.closest<HTMLElement>('[data-track]');
+      const name = el?.dataset.track;
+      if (!name) return;
+      (window as unknown as { goatcounter?: GoatCounter }).goatcounter?.count?.({ path: name, title: name, event: true });
+    },
+    { capture: true },
+  );
+}
+
 // ---------------- archive filters ----------------
 
 function filters() {
@@ -204,4 +221,5 @@ export function initInside() {
   owls();
   parallax();
   filters();
+  tracking();
 }

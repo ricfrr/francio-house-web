@@ -114,11 +114,11 @@ const heading = e.title === e.artist ? e.artist : `${e.artist} — ${e.title}`;
               </dl>
               <div class="event__actions">
                 {isUrl(e.rsvp) && (
-                  <a class="btn btn--sun" href={e.rsvp} target="_blank" rel="noopener">
+                  <a class="btn btn--sun" href={e.rsvp} target="_blank" rel="noopener" data-track={`rsvp-${e.slug}`}>
                     {t.next.rsvp} <Icon name="arrow" />
                   </a>
                 )}
-                <a class="btn btn--light" href={e.icsUrl} download>
+                <a class="btn btn--light" href={e.icsUrl} download data-track={`calendar-${e.slug}`}>
                   <Icon name="calendar" /> .ics
                 </a>
                 <a class="btn btn--light" href={googleCalendarUrl(e)} target="_blank" rel="noopener">

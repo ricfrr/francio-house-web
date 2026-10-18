@@ -38,11 +38,11 @@ const other = t.lang.other;
   <div class="outside__ui">
     <div class="outside__top">
       <p class="outside__plate mono" aria-hidden="true">francio.house</p>
-      <a class="outside__lang mono" href={`${switchPath(Astro.url.pathname, other)}?intro`} hreflang={other} lang={other} aria-label={t.lang.switchLabel}>
+      <a class="outside__lang mono" href={`${switchPath(Astro.url.pathname, other)}?intro`} hreflang={other} lang={other} aria-label={t.lang.switchLabel} data-track="lang-switch">
         {t.lang.short}
       </a>
     </div>
-    <button class="outside__skip mono" type="button" data-skip>{t.outside.skip} <span aria-hidden="true">→</span></button>
+    <button class="outside__skip mono" type="button" data-skip data-track="intro-skip">{t.outside.skip} <span aria-hidden="true">→</span></button>
 
     <div class="outside__captions" aria-hidden="true">
       {
@@ -55,7 +55,7 @@ const other = t.lang.other;
     </div>
 
     <div class="outside__bell">
-      <button class="bell" type="button" data-enter>
+      <button class="bell" type="button" data-enter data-track="intro-enter">
         <span class="bell__label" aria-hidden="true">FRANCIO</span>
         <span class="bell__button" aria-hidden="true"></span>
         <span class="bell__text">{t.outside.enter}</span>

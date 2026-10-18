@@ -43,13 +43,13 @@ const other = t.lang.other;
     </ul>
   </nav>
 
-  <a class="lang-btn" href={langHref ?? switchPath(Astro.url.pathname, other)} hreflang={other} lang={other} aria-label={t.lang.switchLabel} data-lang-switch>
+  <a class="lang-btn" href={langHref ?? switchPath(Astro.url.pathname, other)} hreflang={other} lang={other} aria-label={t.lang.switchLabel} data-lang-switch data-track="lang-switch">
     {t.lang.short}
   </a>
 
   {
     home ? (
-      <button class="outside-btn" type="button" data-go-outside>
+      <button class="outside-btn" type="button" data-go-outside data-track="step-outside">
         <Icon name="door" />
         <span>{t.nav.outside}</span>
       </button>

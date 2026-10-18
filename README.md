@@ -221,6 +221,20 @@ event, the "the house" section, how a night works, the captions on the street, b
 
 ---
 
+## Visitor counts (GoatCounter)
+
+The site can count visits **without tracking people**: [GoatCounter](https://www.goatcounter.com) sets no cookies and stores no
+personal data, so it doesn't need a cookie banner (it's still polite to mention it in a privacy note).
+
+1. Create a free site at goatcounter.com. Its code is the part before `.goatcounter.com` (e.g. `francio`).
+2. Put it in `src/site.config.ts` → `analytics.goatcounter`, commit and push. While it's empty, nothing is loaded.
+
+You'll see visits per page, where visitors came from, country, device and browser. On top of that, these clicks are counted
+as events (names in the dashboard): `intro-enter` (doorbell), `intro-skip`, `step-outside`, `lang-switch`,
+`rsvp-<event>` (booking button), `calendar-<event>`, `artist-link-<site>`. To count another button, add `data-track="name"` to it.
+
+---
+
 ## Deploying to GitHub Pages and francio.house
 
 The workflow in `.github/workflows/deploy.yml` builds and publishes the site on every push to

@@ -149,7 +149,7 @@ const vine = (() => {
 
           <div class="hero__actions">
             {isUrl(e.rsvp) ? (
-              <a class="btn btn--sun" href={e.rsvp} target="_blank" rel="noopener">
+              <a class="btn btn--sun" href={e.rsvp} target="_blank" rel="noopener" data-track={`rsvp-${e.slug}`}>
                 {t.next.rsvp}
                 <Icon name="arrow" />
               </a>
@@ -159,7 +159,7 @@ const vine = (() => {
             <a class="btn btn--light" href={e.url}>
               {t.next.details}
             </a>
-            <a class="btn btn--ghost" href={e.icsUrl} download>
+            <a class="btn btn--ghost" href={e.icsUrl} download data-track={`calendar-${e.slug}`}>
               <Icon name="calendar" />
               {t.next.calendar}
             </a>

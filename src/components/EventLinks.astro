@@ -19,7 +19,7 @@ const entries = Object.entries(links);
     <ul class:list={['links', className]} aria-label={label}>
       {entries.map(([key, url]) => (
         <li>
-          <a class="chip" href={url} target="_blank" rel="noopener">
+          <a class="chip" href={url} target="_blank" rel="noopener" data-track={`artist-link-${key}`}>
             <Icon name={key} />
             {linkLabel(key, lang)}
           </a>

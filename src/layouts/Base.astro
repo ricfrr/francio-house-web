@@ -51,6 +51,11 @@ const shareImage = new URL(image ?? '/og.jpg', site.url).href;
     <meta property="og:image" content={shareImage} />
     <meta name="twitter:card" content="summary_large_image" />
     <slot name="head" />
+    {
+      site.analytics.goatcounter && (
+        <script is:inline async data-goatcounter={`https://${site.analytics.goatcounter}.goatcounter.com/count`} src="//gc.zgo.at/count.js" />
+      )
+    }
 
     <script is:inline>
       document.documentElement.classList.add('js');

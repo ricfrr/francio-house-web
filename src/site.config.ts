@@ -11,6 +11,15 @@ export const site = {
   defaultDurationHours: 4,
 
   /**
+   * Visitor counts, without tracking people: GoatCounter sets no cookies and stores no personal data.
+   * Create a free site at goatcounter.com and put its code here (the part before ".goatcounter.com").
+   * Leave it empty and nothing is loaded.
+   */
+  analytics: {
+    goatcounter: '' as string,
+  },
+
+  /**
    * Contacts. Leave a field empty ('') and it is simply not shown anywhere.
    * Fill them in when they exist, e.g.
    *   email: 'ciao@francio.house',
