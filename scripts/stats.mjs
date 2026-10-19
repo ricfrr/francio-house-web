@@ -206,7 +206,8 @@ function shape(raw) {
     rsvp: sumEvents('rsvp-').map((e) => ({ label: nameOf(e.name.slice(5)), count: e.count })).sort((a, b) => b.count - a.count),
     calendar: sumEvents('calendar-').map((e) => ({ label: nameOf(e.name.slice(9)), count: e.count })).sort((a, b) => b.count - a.count),
     links: sumEvents('artist-link-').map((e) => ({ label: e.name.slice(12), count: e.count })).sort((a, b) => b.count - a.count),
-    refs: raw.side.toprefs,
+    // visits with no referrer (links opened from WhatsApp or Instagram, bookmarks, typed addresses) come back with an empty name
+    refs: raw.side.toprefs.map((r) => ({ ...r, name: r.name?.trim() || 'Diretto (WhatsApp, Instagram, segnalibri…)' })),
     countries: raw.side.locations,
     systems: raw.side.systems,
     browsers: raw.side.browsers,
