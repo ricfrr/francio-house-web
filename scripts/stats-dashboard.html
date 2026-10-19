@@ -206,11 +206,16 @@
 
       function funnel(d) {
         const home = Math.max(d.homeVisits, 1);
+        const i = d.intro;
         const rows = [
           ['Arrivano sulla home', d.homeVisits, '#74c6f4'],
-          ['Suonano il campanello', d.intro.enter, '#d3166d'],
-          ['Saltano l’intro', d.intro.skip, '#f28dba'],
-          ['Escono di nuovo fuori', d.intro.outside, '#93e2b7'],
+          ['Vedono la strada (intro)', i.seen, '#170f55'],
+          ['↳ entrano col campanello', i.bell, '#d3166d'],
+          ['↳ entrano scorrendo', i.scroll, '#f28dba'],
+          ['↳ entrano con “salta”', i.skipped, '#ffd23f'],
+          ['Tornano e non la vedono', i.returning, '#93e2b7'],
+          ['Arrivano da un link diretto', i.direct, '#1f7a3c'],
+          ['Escono di nuovo fuori', i.outside, '#9b5cff'],
         ];
         return el(
           'div',
@@ -229,7 +234,8 @@
         const best = d.daily.reduce((a, b) => (b.count > a.count ? b : a), { count: -1 });
         const rsvpTotal = d.rsvp.reduce((a, r) => a + r.count, 0);
         const enPct = pct(d.enVisits, d.itVisits + d.enVisits);
-        const decided = d.intro.enter + d.intro.skip;
+        const i = d.intro;
+        const entered = i.bell + i.scroll + i.skipped + i.failed;
 
         app.append(
           el(
@@ -237,7 +243,7 @@
             { class: 'grid kpis' },
             kpi('k1', nf.format(d.totalVisits), 'visite alle pagine', `ultimi ${d.days} giorni`),
             kpi('k2', best.count > 0 ? nf.format(best.count) : '–', 'giorno più forte', best.count > 0 ? new Date(best.day + 'T12:00:00').toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' }) : ''),
-            kpi('k3', pct(d.intro.enter, decided), 'suona il campanello', `${nf.format(d.intro.enter)} contro ${nf.format(d.intro.skip)} che saltano`),
+            kpi('k3', i.seen ? pct(entered, i.seen) : '–', 'entra dopo aver visto l’intro', i.seen ? `${nf.format(entered)} su ${nf.format(i.seen)} · ${nf.format(i.returning)} tornano e la saltano` : 'i nuovi conteggi partono dal primo giorno dopo l’aggiornamento'),
             kpi('k4', nf.format(rsvpTotal), 'clic su “Prenota”', `${nf.format(d.calendar.reduce((a, r) => a + r.count, 0))} aggiunte al calendario`),
             kpi('k5', enPct, 'legge in inglese', `${nf.format(d.enVisits)} visite alle pagine EN`),
           ),
@@ -246,7 +252,7 @@
           el(
             'div',
             { class: 'grid two' },
-            card('L’ingresso in casa', 'rispetto alle visite alla home', funnel(d), el('p', { class: 'note' }, 'Con “campanello” si intende chi ha premuto “Entra in casa”. Chi scorre con il dito o la rotella non viene contato, quindi il resto ha scelto di scorrere.')),
+            card('L’ingresso in casa', 'rispetto alle visite alla home', funnel(d), el('p', { class: 'note' }, 'La home conta ogni visita. “Vedono la strada” è chi vede l’intro (prima visita); chi è già entrato una volta ci passa sopra e viene contato in “tornano”, e chi arriva da un link a una sezione in “link diretto”. Sono conteggi nuovi: i giorni precedenti non li hanno.')),
             card('Prenotazioni e calendario', 'clic, per serata', el('h3', { style: 'margin:0 0 8px;font-size:.85rem' }, 'Prenota'), list(d.rsvp, '#d3166d', 'label'), el('h3', { style: 'margin:16px 0 8px;font-size:.85rem' }, 'Aggiungi al calendario'), list(d.calendar, '#74c6f4', 'label'), d.links.length ? el('h3', { style: 'margin:16px 0 8px;font-size:.85rem' }, 'Link agli artisti') : null, d.links.length ? list(d.links, '#f28dba', 'label') : null),
           ),
           el('div', { class: 'grid three' }, card('Paesi', null, list(d.countries, '#170f55')), card('Dispositivi', null, list(d.systems, '#d3166d')), card('Browser', null, list(d.browsers, '#1f7a3c'))),

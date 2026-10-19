@@ -1,4 +1,5 @@
 import type { Street, StreetFrame } from './street';
+import { track } from '../../scripts/track';
 
 const STORAGE_KEY = 'fh:inside';
 /** Past this point the camera is through the door and the screen shows only the site. */
@@ -47,7 +48,7 @@ export function initOutside() {
     ui.style.setProperty('--ui', String(1 - smooth(0.74, 0.84, p)));
     // the room behind the door grows as we get closer
     html.style.setProperty('--approach', (0.86 + 0.14 * smooth(0.72, 0.985, p)).toFixed(4));
-    if (p >= FINISH_AT && isOutside()) finish();
+    if (p >= FINISH_AT && isOutside()) finish(autoplay !== 0 ? 'bell' : 'scroll');
   }
 
   function onFrame(f: StreetFrame) {
@@ -73,7 +74,7 @@ export function initOutside() {
       .catch((err) => {
         // no WebGL (or the scene failed to load): skip the street and open the door
         console.warn('Street scene unavailable, going straight inside.', err);
-        finish();
+        finish('error');
         return null;
       })
       .finally(() => {
@@ -88,21 +89,22 @@ export function initOutside() {
     if (still()) {
       // no camera move: the street simply fades away
       outside!.style.opacity = String(1 - smooth(0.1, 0.95, p));
-      if (p >= 0.97) finish();
+      if (p >= 0.97) finish('scroll');
     } else {
       street?.setTarget(p);
     }
   }
 
-  function leave() {
+  /** `how`: the doorbell (when there is no 3D to play) or the skip button / Esc. */
+  function leave(how: 'bell' | 'skip' = 'skip') {
     if (!isOutside()) return;
     outside!.classList.add('is-leaving');
-    window.setTimeout(finish, still() ? 50 : 480);
+    window.setTimeout(() => finish(how), still() ? 50 : 480);
   }
 
   function enter() {
     if (!isOutside()) return;
-    if (!street || still()) return leave();
+    if (!street || still()) return leave('bell');
     if (autoplay) return;
     html.classList.add('is-autoplay');
     const from = progress;
@@ -117,8 +119,10 @@ export function initOutside() {
     autoplay = requestAnimationFrame(step);
   }
 
-  function finish() {
+  /** Every way of getting in is counted once, anonymously: the doorbell, scrolling, skipping, or a failure of the 3D scene. */
+  function finish(how: 'bell' | 'scroll' | 'skip' | 'error') {
     if (!isOutside()) return;
+    track(`intro-done-${how}`);
     if (autoplay > 0) cancelAnimationFrame(autoplay);
     autoplay = 0;
     try {
@@ -165,6 +169,17 @@ export function initOutside() {
   html.dataset.motion = reducedMotion.matches ? 'reduced' : 'full';
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
+  // who sees the street, and who doesn't (people who already went in once, or arrive on a link to a section)
+  {
+    let seen = false;
+    try {
+      seen = localStorage.getItem(STORAGE_KEY) === '1';
+    } catch {
+      /* private mode */
+    }
+    track(isOutside() ? 'intro-seen' : seen ? 'returning-visitor' : 'link-direct');
+  }
+
   if (isOutside()) {
     house.inert = true;
     window.scrollTo(0, 0);
@@ -174,12 +189,12 @@ export function initOutside() {
 
   window.addEventListener('scroll', onScroll, { passive: true });
   bell.addEventListener('click', enter);
-  outside.querySelector('[data-skip]')?.addEventListener('click', leave);
+  outside.querySelector('[data-skip]')?.addEventListener('click', () => leave('skip'));
   document.addEventListener('click', (e) => {
     if ((e.target as Element | null)?.closest('[data-go-outside]')) goOutside();
   });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && isOutside()) leave();
+    if (e.key === 'Escape' && isOutside()) leave('skip');
   });
   window.addEventListener(
     'pointermove',

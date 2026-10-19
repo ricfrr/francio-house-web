@@ -125,7 +125,9 @@ function collectDemo(days) {
     if (i < 4) hits.push(mkPage(`/en/events/${s}/`, names[s], Math.round(homeEn * (0.3 - i * 0.05))));
   });
   const ev = (path, count) => ({ path, title: path, count, event: true, path_id: 0, stats: [] });
-  hits.push(ev('intro-enter', Math.round(homeIt * 0.46)), ev('intro-skip', Math.round(homeIt * 0.17)), ev('step-outside', Math.round(homeIt * 0.06)), ev('lang-switch', Math.round(homeIt * 0.09)));
+  const seen = Math.round(homeIt * 0.58);
+  hits.push(ev('intro-seen', seen), ev('intro-done-bell', Math.round(seen * 0.38)), ev('intro-done-scroll', Math.round(seen * 0.36)), ev('intro-done-skip', Math.round(seen * 0.16)), ev('returning-visitor', Math.round(homeIt * 0.3)), ev('link-direct', Math.round(homeIt * 0.12)));
+  hits.push(ev('intro-enter', Math.round(seen * 0.38)), ev('intro-skip', Math.round(seen * 0.18)), ev('step-outside', Math.round(homeIt * 0.06)), ev('lang-switch', Math.round(homeIt * 0.09)));
   slugs.slice(-4).forEach((s, i) => {
     hits.push(ev(`rsvp-${s}`, Math.round(34 - i * 8)), ev(`calendar-${s}`, Math.round(12 - i * 2)));
   });
@@ -202,7 +204,20 @@ function shape(raw) {
     homeVisits,
     itVisits,
     enVisits,
-    intro: { enter: get('intro-enter'), skip: get('intro-skip'), outside: get('step-outside'), lang: get('lang-switch') },
+    intro: {
+      seen: get('intro-seen'),
+      bell: get('intro-done-bell'),
+      scroll: get('intro-done-scroll'),
+      skipped: get('intro-done-skip'),
+      failed: get('intro-done-error'),
+      returning: get('returning-visitor'),
+      direct: get('link-direct'),
+      // clicks on the buttons (older counts, and a check of the above)
+      enter: get('intro-enter'),
+      skip: get('intro-skip'),
+      outside: get('step-outside'),
+      lang: get('lang-switch'),
+    },
     rsvp: sumEvents('rsvp-').map((e) => ({ label: nameOf(e.name.slice(5)), count: e.count })).sort((a, b) => b.count - a.count),
     calendar: sumEvents('calendar-').map((e) => ({ label: nameOf(e.name.slice(9)), count: e.count })).sort((a, b) => b.count - a.count),
     links: sumEvents('artist-link-').map((e) => ({ label: e.name.slice(12), count: e.count })).sort((a, b) => b.count - a.count),

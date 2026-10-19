@@ -4,6 +4,7 @@
  */
 
 import { relativeWords } from '../i18n/relative';
+import { track } from './track';
 
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
@@ -223,8 +224,6 @@ function parallax() {
 
 // ---------------- anonymous click counts (only does something when GoatCounter is configured) ----------------
 
-type GoatCounter = { count?: (o: { path: string; title?: string; event?: boolean }) => void };
-
 function tracking() {
   document.addEventListener(
     'click',
@@ -232,7 +231,7 @@ function tracking() {
       const el = (e.target as Element | null)?.closest<HTMLElement>('[data-track]');
       const name = el?.dataset.track;
       if (!name) return;
-      (window as unknown as { goatcounter?: GoatCounter }).goatcounter?.count?.({ path: name, title: name, event: true });
+      track(name);
     },
     { capture: true },
   );

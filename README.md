@@ -238,7 +238,7 @@ personal data, so it doesn't need a cookie banner (it's still polite to mention 
 2. Put it in `src/site.config.ts` → `analytics.goatcounter`, commit and push. While it's empty, nothing is loaded.
 
 You'll see visits per page, where visitors came from, country, device and browser. On top of that, these clicks are counted
-as events (names in the dashboard): `intro-enter` (doorbell), `intro-skip`, `step-outside`, `lang-switch`,
+as events (names in the dashboard): `intro-seen` (sees the street), `intro-done-bell` / `intro-done-scroll` / `intro-done-skip` (how they got in), `returning-visitor` (already been inside, so no intro), `link-direct` (arrived on a link to a section), `intro-enter` / `intro-skip` (button clicks), `step-outside`, `lang-switch`,
 `rsvp-<event>` (booking button), `calendar-<event>`, `artist-link-<site>`. To count another button, add `data-track="name"` to it.
 
 ### A nicer, local dashboard
