@@ -15,7 +15,7 @@ const rot = seeded(e.slug, -2.6, 2.6).toFixed(2);
 const tapeRot = seeded(e.slug + 't', -9, 9).toFixed(1);
 ---
 
-<li class="card" data-ends={e.end.toISOString()} style={`--accent:${e.accent};--accent-ink:${e.ink};--rot:${rot}deg;--i:${index}`} data-reveal>
+<li class="card" data-event={e.slug} data-ends={e.end.toISOString()} style={`--accent:${e.accent};--accent-ink:${e.ink};--rot:${rot}deg;--i:${index}`} data-reveal>
   <a class="card__link" href={e.url}>
     <figure class="card__poster" data-tilt>
       <span class="tape" style={`left:50%;top:-12px;transform:translateX(-50%) rotate(${tapeRot}deg)`}></span>

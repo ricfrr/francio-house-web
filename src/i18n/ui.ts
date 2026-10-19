@@ -102,7 +102,7 @@ const it = {
     title: ["l'archivio", 'della casa'],
     intro:
       'Tutte le serate passate di qui: i manifesti, qualche foto mossa e le registrazioni, quando qualcuno si è ricordato di premere rec.',
-    count: (n: number, year: string) => `${n} serate dal ${year}.`,
+    countSince: 'serate dal',
     filter: 'Mostra anno',
     all: 'Tutti',
     listen: 'ascolta',
@@ -228,7 +228,7 @@ const en: Dict = {
     title: ['the house', 'archive'],
     intro:
       'Every night that happened here: the posters, a few blurry photos, and recordings when someone remembered to press record.',
-    count: (n, year) => `${n} nights since ${year}.`,
+    countSince: 'nights since',
     filter: 'Show year',
     all: 'All',
     listen: 'listen',

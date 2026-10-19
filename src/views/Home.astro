@@ -17,8 +17,8 @@ interface Props {
 const { lang } = Astro.props;
 const t = ui[lang];
 const { upcoming, past } = await getSplitEvents(lang);
-// A few candidates for the hero, in case the next one ends before the next rebuild.
-const candidates = upcoming.slice(0, 3);
+// Include future archive cards so the browser can reveal them as each event ends.
+const archive = [...upcoming].reverse().concat(past);
 ---
 
 <Base lang={lang} intro>
@@ -29,9 +29,9 @@ const candidates = upcoming.slice(0, 3);
     <Topbar lang={lang} home />
     <main>
       <h1 class="sr-only">{t.meta.h1}</h1>
-      <NextEvent lang={lang} candidates={candidates} />
+      <NextEvent lang={lang} candidates={upcoming} />
       <Upcoming lang={lang} events={upcoming.slice(1)} />
-      <Archive lang={lang} events={past} />
+      <Archive lang={lang} events={archive} />
       <HouseRoom lang={lang} />
     </main>
     <Footer lang={lang} home />

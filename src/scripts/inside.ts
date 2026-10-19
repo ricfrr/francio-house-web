@@ -8,7 +8,7 @@ import { relativeWords } from '../i18n/relative';
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
 
-// ---------------- dates: hide what ended since the last build, say "in 3 days" ----------------
+// ---------------- dates: keep next, upcoming and archive in sync between builds ----------------
 
 function relative(start: Date, end: Date, now: Date): string | null {
   const w = document.documentElement.lang === 'en' ? relativeWords.en : relativeWords.it;
@@ -30,16 +30,59 @@ export function refreshDates(now = new Date()) {
 
   // the hero shows the first candidate that hasn't ended yet
   const slots = [...document.querySelectorAll<HTMLElement>('[data-slot]')];
+  const live = slots.find((s) => !s.classList.contains('is-over'));
   if (slots.length) {
-    const live = slots.find((s) => !s.classList.contains('is-over'));
     slots.forEach((s) => (s.hidden = s !== live));
     const empty = document.querySelector<HTMLElement>('[data-slot-empty]');
     if (empty) empty.hidden = !!live;
   }
 
+  // A promoted hero must not also remain on the upcoming wall.
+  const cards = [...document.querySelectorAll<HTMLElement>('[data-wall] [data-event]')];
+  cards.forEach((card) => {
+    card.hidden = card.classList.contains('is-over') || card.dataset.event === live?.dataset.event;
+  });
+  const wallEmpty = !cards.some((card) => !card.hidden);
+  const upcomingEmpty = document.querySelector<HTMLElement>('[data-upcoming-empty]');
+  if (upcomingEmpty) upcomingEmpty.hidden = !wallEmpty;
+  const wallHint = document.querySelector<HTMLElement>('[data-wall-hint]');
+  if (wallHint) wallHint.hidden = wallEmpty;
+
+  refreshArchive(now);
+
   document.querySelectorAll<HTMLElement>('[data-rel]').forEach((el) => {
     const text = relative(new Date(el.dataset.rel!), new Date(el.dataset.relEnd ?? el.dataset.rel!), now);
     if (text) el.textContent = text;
+  });
+}
+
+function refreshArchive(now: Date) {
+  const archive = document.getElementById('archive');
+  if (!archive) return;
+
+  archive.querySelectorAll<HTMLElement>('[data-archive-end]').forEach((item) => {
+    item.hidden = new Date(item.dataset.archiveEnd!) > now;
+  });
+  const past = [...archive.querySelectorAll<HTMLElement>('[data-archive-event]')].filter((item) => !item.hidden);
+  const summary = archive.querySelector<HTMLElement>('[data-archive-summary]');
+  if (summary) summary.hidden = !past.length;
+  const count = archive.querySelector<HTMLElement>('[data-archive-count]');
+  if (count) count.textContent = String(past.length);
+  const firstYear = archive.querySelector<HTMLElement>('[data-archive-first-year]');
+  if (firstYear) firstYear.textContent = past.at(-1)?.closest<HTMLElement>('[data-year]')?.dataset.year ?? '';
+
+  const years = [...archive.querySelectorAll<HTMLElement>('[data-year]')];
+  const pastYears = new Set(years.filter((year) => year.querySelector('[data-archive-event]:not([hidden])')).map((year) => year.dataset.year!));
+  const filters = archive.querySelector<HTMLElement>('[data-filters]');
+  if (filters) {
+    filters.hidden = pastYears.size < 2;
+    filters.querySelectorAll<HTMLButtonElement>('[data-filter]').forEach((button) => {
+      button.hidden = button.dataset.filter !== 'all' && !pastYears.has(button.dataset.filter!);
+    });
+  }
+  const selected = filters?.querySelector<HTMLElement>('[aria-pressed="true"]')?.dataset.filter ?? 'all';
+  years.forEach((year) => {
+    year.hidden = !pastYears.has(year.dataset.year!) || (selected !== 'all' && selected !== year.dataset.year);
   });
 }
 
@@ -203,11 +246,8 @@ function filters() {
   group.addEventListener('click', (e) => {
     const btn = (e.target as Element).closest<HTMLButtonElement>('[data-filter]');
     if (!btn) return;
-    const value = btn.dataset.filter!;
     group.querySelectorAll('[data-filter]').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
-    document.querySelectorAll<HTMLElement>('[data-year]').forEach((y) => {
-      y.hidden = value !== 'all' && y.dataset.year !== value;
-    });
+    refreshDates();
   });
 }
 

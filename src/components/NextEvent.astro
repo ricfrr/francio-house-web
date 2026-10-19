@@ -14,7 +14,7 @@ import { heart } from '../lib/decor';
 
 interface Props {
   lang: Lang;
-  /** The next few upcoming events. The first one that hasn't ended is shown. */
+  /** Upcoming events, soonest first. The first one that hasn't ended is shown. */
   candidates: HouseEvent[];
 }
 const { lang, candidates } = Astro.props;
@@ -88,7 +88,7 @@ const vine = (() => {
 
   {
     candidates.map((e, i) => (
-      <article class="hero__slot" data-ends={e.end.toISOString()} data-slot hidden={i > 0} style={`--accent:${e.accent};--accent-ink:${e.ink}`}>
+      <article class="hero__slot" data-event={e.slug} data-ends={e.end.toISOString()} data-slot hidden={i > 0} style={`--accent:${e.accent};--accent-ink:${e.ink}`}>
         <div class="hero__poster-col">
           <figure class="hero__poster" data-tilt>
             <span class="tape" style="left:8%;top:-12px;transform:rotate(-8deg)" />

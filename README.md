@@ -205,8 +205,10 @@ or videos when you have a source, rather than adding a full biography or technic
   (the rest). Events that have ended go into **the archive**, newest first.
 - The deploy workflow **rebuilds the site every night** (03:30 UTC), so finished events move to the
   archive without anyone pushing anything.
-- The page also re-checks dates in the visitor's browser, so a concert that ended a few hours ago
-  never shows as "next", even before the nightly rebuild.
+- The page also re-checks dates in the visitor's browser on arrival and every minute. When a concert
+  ends, the next one takes its place and its poster appears in the archive, with the count and year
+  filters updated too. Future archive cards are built in advance and stay hidden until then, so this
+  works even before the nightly rebuild.
 - "in 7 days", "tomorrow" and "tonight" labels are computed live in the browser.
 
 > GitHub pauses scheduled workflows in repositories with no activity for 60 days. If the archive

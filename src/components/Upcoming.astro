@@ -32,11 +32,10 @@ const t = ui[lang].upcoming;
           <PosterCard event={e} index={i} more={t.more} />
         ))}
       </ol>
-    ) : (
-      <p class="wrap upcoming__empty hand">{t.empty}</p>
-    )
+    ) : null
   }
-  <p class="wrap wall__hint mono" aria-hidden="true">{t.swipe}</p>
+  <p class="wrap upcoming__empty hand" data-upcoming-empty hidden={events.length > 0}>{t.empty}</p>
+  <p class="wrap wall__hint mono" data-wall-hint aria-hidden="true" hidden={!events.length}>{t.swipe}</p>
 
   <Leaf kind="palm" class="upcoming__leaf" />
 </section>
@@ -97,6 +96,11 @@ const t = ui[lang].upcoming;
 
   .upcoming__empty {
     font-size: 2rem;
+  }
+
+  .upcoming__empty[hidden],
+  .wall__hint[hidden] {
+    display: none;
   }
 
   .upcoming :global(.upcoming__leaf) {

@@ -10,14 +10,18 @@ import { ui, type Lang } from '../i18n/ui';
 
 interface Props {
   lang: Lang;
+  /** All events, newest first. Future cards stay hidden until the event ends. */
   events: HouseEvent[];
 }
 const { lang, events } = Astro.props;
 const t = ui[lang];
 
+const now = new Date();
+const past = events.filter((e) => e.end <= now);
+const pastYears = new Set(past.map((e) => formatYear(e.start)));
 const years = [...new Set(events.map((e) => formatYear(e.start)))];
 const byYear = years.map((year) => ({ year, events: events.filter((e) => formatYear(e.start) === year) }));
-const first = events.at(-1);
+const first = past.at(-1);
 ---
 
 <section id="archive" class="room archive" aria-labelledby="archive-title">
@@ -30,16 +34,20 @@ const first = events.at(-1);
     <div class="archive__intro">
       <p>
         {t.archive.intro}
-        {first && <> {t.archive.count(events.length, formatYear(first.start))}</>}
+        {' '}
+        <span data-archive-summary hidden={!first}>
+          <span data-archive-count>{past.length}</span> {t.archive.countSince}{' '}
+          <span data-archive-first-year>{first ? formatYear(first.start) : ''}</span>.
+        </span>
       </p>
       {
         years.length > 1 && (
-          <div class="filters" role="group" aria-label={t.archive.filter} data-filters>
+          <div class="filters" role="group" aria-label={t.archive.filter} data-filters hidden={pastYears.size < 2}>
             <button type="button" class="chip" aria-pressed="true" data-filter="all">
               {t.archive.all}
             </button>
             {years.map((y) => (
-              <button type="button" class="chip" aria-pressed="false" data-filter={y}>
+              <button type="button" class="chip" aria-pressed="false" data-filter={y} hidden={!pastYears.has(y)}>
                 {y}
               </button>
             ))}
@@ -51,7 +59,7 @@ const first = events.at(-1);
 
   {
     byYear.map(({ year, events }) => (
-      <div class="year" data-year={year}>
+      <div class="year" data-year={year} hidden={!pastYears.has(year)}>
         <h3 class="year__title wrap">
           <span>{year}</span>
         </h3>
@@ -59,6 +67,9 @@ const first = events.at(-1);
           {events.flatMap((e, i) => [
             <li
               class="tile tile--poster"
+              data-archive-event
+              data-archive-end={e.end.toISOString()}
+              hidden={e.end > now}
               style={`--rot:${seeded(e.slug, -3.5, 3.5).toFixed(2)}deg;--accent:${e.accent};--reveal-delay:${(i % 4) * 0.06}s`}
               data-reveal
             >
@@ -94,6 +105,8 @@ const first = events.at(-1);
             ...e.photos.map((photo, pi) => (
               <li
                 class="tile tile--photo"
+                data-archive-end={e.end.toISOString()}
+                hidden={e.end > now}
                 style={`--rot:${seeded(e.slug + pi, -5, 5).toFixed(2)}deg`}
                 data-reveal
               >
@@ -182,7 +195,10 @@ const first = events.at(-1);
     color: var(--uv);
   }
 
-  .year[hidden] {
+  .year[hidden],
+  .tile[hidden],
+  .filters[hidden],
+  .filters .chip[hidden] {
     display: none;
   }
 
