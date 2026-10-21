@@ -23,7 +23,7 @@ Il 31 ottobre la casa festeggia Halloween: si comincia alle 19 con buffet e drin
 Ingresso 10 €, solo su prenotazione: per aiutarci a organizzare, compila il [modulo di prenotazione](https://docs.google.com/forms/d/e/1FAIpQLSfKpL6N10xiauwqjjqVNAMfq69MH7vDtUzF6xxgeVdK0c8qGw/viewform).
 La maschera è fortemente gradita. 👹
 
-The Cosmic Gospel è il progetto del marchigiano Gabriel Medina: rock psichedelico ruvido e viscerale, un sound riconoscibile e fortemente personale. Dal vivo è un trio — voce/chitarra, basso, batteria e sequenze — dall'impatto intenso e ipnotico. Album d'esordio salutato dalla critica come uno dei debutti rock più interessanti dell'anno (Rockit, Rumore, OndaRock), palchi divisi con Editors, Edda e Any Other, e un nuovo disco in arrivo nel 2026.
+The Cosmic Gospel è il progetto del marchigiano Gabriel Medina: rock psichedelico ruvido e viscerale, un sound riconoscibile e fortemente personale. Dal vivo è un trio (voce/chitarra, basso, batteria e sequenze) dall'impatto intenso e ipnotico. Album d'esordio salutato dalla critica come uno dei debutti rock più interessanti dell'anno (Rockit, Rumore, OndaRock), palchi divisi con Editors, Edda e Any Other, e un nuovo disco in arrivo nel 2026.
 
 <!-- en -->
 
@@ -31,4 +31,4 @@ On 31 October the house celebrates Halloween: we start at 7 pm with a buffet and
 Entry €10, booking required: please fill in the [booking form](https://docs.google.com/forms/d/e/1FAIpQLSfKpL6N10xiauwqjjqVNAMfq69MH7vDtUzF6xxgeVdK0c8qGw/viewform) to help us organise.
 Costumes strongly encouraged. 👹
 
-The Cosmic Gospel is the project of Gabriel Medina from Italy’s Marche region: raw, visceral psychedelic rock with a distinctive, deeply personal sound. Live, it’s a trio — vocals/guitar, bass, drums and sequences — with an intense, hypnotic impact. His debut album was hailed by critics as one of the year’s most interesting rock debuts (Rockit, Rumore, OndaRock). He has shared stages with Editors, Edda and Any Other, and a new album is on the way in 2026.
+The Cosmic Gospel is the project of Gabriel Medina from Italy’s Marche region: raw, visceral psychedelic rock with a distinctive, deeply personal sound. Live, it’s a trio (vocals/guitar, bass, drums and sequences) with an intense, hypnotic impact. His debut album was hailed by critics as one of the year’s most interesting rock debuts (Rockit, Rumore, OndaRock). He has shared stages with Editors, Edda and Any Other, and a new album is on the way in 2026.
