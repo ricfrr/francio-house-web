@@ -1,27 +1,27 @@
 ---
 title: After Christmas Party
 artist: Gipsyland Trio Manouche
-genre: manouche
+genre: jazz manouche
 date: 2023-12-26
 time: "19:00"
 poster: ./posters/gipsyland-trio-manouche.jpg
 posterAlt: Illustrazione vintage su un'insegna di latta, con una donna dal foulard rosso che suona una chitarra seduta su una custodia blu, sotto un cielo stellato con una grande luna e stelle gialle.
-summary: L'After Christmas Party con il Gipsyland Trio Manouche dal vivo, il giorno di Santo Stefano. Aperitivo, 10 €, prenotazione in anticipo.
+summary: Swing, chitarre acustiche e improvvisazione con il Gipsyland Trio Manouche, per l'After Christmas Party di Santo Stefano.
 entry: 10 € · aperitivo
 rsvp: Prenotazione in anticipo
 en:
   title: After Christmas Party
-  genre: manouche
+  genre: jazz manouche
   posterAlt: Vintage tin-sign style illustration of a woman in a red headscarf playing a guitar, sitting on a blue case under a starry sky with a big moon and yellow stars.
-  summary: The After Christmas Party with Gipsyland Trio Manouche live, on Boxing Day. Aperitivo, €10, advance booking.
+  summary: Swing, acoustic guitars and improvisation with Gipsyland Trio Manouche, for the After Christmas Party on Boxing Day.
   entry: €10 · aperitivo
   rsvp: Advance booking
 ---
 
-Il 26 dicembre 2023, alle 19, il Gipsyland Trio Manouche ha suonato dal vivo in casa per l'After Christmas Party,
-con l'aperitivo. Ingresso 10 €, con prenotazione in anticipo.
+Il Gipsyland Trio Manouche ha portato in casa il jazz manouche per l'After Christmas Party di Santo Stefano.
+Swing, chitarre acustiche e improvvisazione, nella tradizione di Django Reinhardt.
 
 <!-- en -->
 
-On 26 December 2023, at 7 pm, Gipsyland Trio Manouche played live at the house for the After Christmas Party,
-with an aperitivo. Entry €10, with advance booking.
+Gipsyland Trio Manouche brought jazz manouche to the house for the After Christmas Party on Boxing Day.
+Swing, acoustic guitars and improvisation in the tradition of Django Reinhardt.
